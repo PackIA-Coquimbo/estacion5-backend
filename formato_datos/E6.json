@@ -1,0 +1,11 @@
+{
+  "id_lote": "LOTE-2026-10-A",
+  "id_caja": "CAJA-0047",
+  "timestamp": "2026-10-18T10:17:15Z",
+  "estacion": "E6",
+  "datos": {
+    "estado_carrito": "normal",
+    "posicion_actual": "estacion_5",
+    "falla_mecanica_detectada": false
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "id_lote": "LOTE-2026-10-A",
+  "id_caja": "CAJA-0047",
+  "timestamp": "2026-10-18T10:16:40Z",
+  "estacion": "E3",
+  "datos": {
+    "peso_total_kg": 4.85,
+    "nivel_llenado": "adecuado",
+    "cantidad_frutas_visibles": 8,
+    "consistencia_fisica": "consistente"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "id_lote": "LOTE-2026-10-A",
+  "id_caja": "CAJA-0047",
+  "timestamp": "2026-10-18T10:17:10Z",
+  "estacion": "E4",
+  "datos": {
+    "categoria_final": "exportacion",
+    "probabilidad": 0.88,
+    "requiere_revision_manual": false
+  }
+}

@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: packia_estacion5_api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Sincroniza cambios en código en tiempo real sin reconstruir la imagen
+      - ./app:/app/app 
+    environment:
+      - PYTHONUNBUFFERED=1
