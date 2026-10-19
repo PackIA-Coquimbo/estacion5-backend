@@ -35,6 +35,7 @@ async def ingest_e3(payload: E3Payload):
 async def ingest_e4(payload: E4Payload):
     return {"status":"success", "estacion":payload.estacion, "caja_id":payload.id_caja}
 
-@app.post("/api/v1/ingest/e4", status_code=status.HTTP_201_CREATED, tags=["Ingesta"])
+# Endpoint para Ingesta de Estación 6
+@app.post("/api/v1/ingest/e6", status_code=status.HTTP_201_CREATED, tags=["Ingesta"])
 async def ingest_e6(payload: E6Payload):
     return {"status":"success", "estacion":payload.estacion, "caja_id":payload.id_caja}
