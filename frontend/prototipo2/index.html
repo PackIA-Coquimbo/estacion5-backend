@@ -336,7 +336,7 @@ button{font:inherit;color:inherit}
     <div class="lgrid">
       <article class="card" id="c-E1"><div class="hd"><div class="code">E1</div><div class="name">Recepción y captura</div><div class="pill">En espera</div></div><div class="bd"></div><div class="ft"><span class="light"></span><span class="a"></span></div></article>
       <article class="card" id="c-E2"><div class="hd"><div class="code">E2</div><div class="name">Calidad visual</div><div class="pill">En espera</div></div><div class="bd"></div><div class="ft"><span class="light"></span><span class="a"></span></div></article>
-      <article class="card" id="c-E3"><div class="hd"><div class="code">E3</div><div class="name">Calibre y consistencia</div><div class="pill">En espera</div></div><div class="bd"></div><div class="ft"><span class="light"></span><span class="a"></span></div></article>
+      <article class="card" id="c-E3"><div class="hd"><div class="code">E3</div><div class="name">Clasificación por tamaño</div><div class="pill">En espera</div></div><div class="bd"></div><div class="ft"><span class="light"></span><span class="a"></span></div></article>
       <article class="card" id="c-E4"><div class="hd"><div class="code">E4</div><div class="name">Decisión comercial</div><div class="pill">En espera</div></div><div class="bd"></div><div class="ft"><span class="light"></span><span class="a"></span></div></article>
       <article class="card" id="c-E5"><div class="hd"><div class="code">E5</div><div class="name">Registro (este equipo)</div><div class="pill">En espera</div></div><div class="bd"></div><div class="ft"><span class="light"></span><span class="a"></span></div></article>
       <article class="card" id="c-E6"><div class="hd"><div class="code">E6</div><div class="name">Movimiento de la cinta</div><div class="pill">En espera</div></div><div class="bd"></div><div class="ft"><span class="light"></span><span class="a"></span></div></article>
@@ -357,7 +357,7 @@ button{font:inherit;color:inherit}
       <header><h2 id="h-hist">Últimos grupos</h2><small id="histCount"></small></header>
       <div class="tbl-wrap">
         <table class="tbl">
-          <thead><tr><th>Grupo</th><th>Salida</th><th>Frutas por categoría</th><th class="r">Peso</th><th>Estado</th></tr></thead>
+          <thead><tr><th>Grupo</th><th>Salida</th><th>Frutas por categoría</th><th class="r">Diám. medio</th><th>Estado</th></tr></thead>
           <tbody id="hist"></tbody>
         </table>
       </div>
@@ -401,8 +401,8 @@ const $=id=>document.getElementById(id);
 const LOTE="LOTE-2026-11-A";
 const DUR=[3.4,5.2,4.5,2.8];            // segundos promedio de proceso en E1..E4
 const MOVE=1.5, EXIT=1.8, REG=1.4, GAP=.8;
-const NAMES={E1:"Recepción",E2:"Calidad visual",E3:"Calibre",E4:"Decisión",E5:"Registro",E6:"Cinta"};
-const LONG={E1:"recepción y captura",E2:"calidad visual",E3:"calibre y consistencia",E4:"decisión comercial"};
+const NAMES={E1:"Recepción",E2:"Calidad visual",E3:"Tamaño",E4:"Decisión",E5:"Registro",E6:"Cinta"};
+const LONG={E1:"recepción y captura",E2:"calidad visual",E3:"clasificación por tamaño",E4:"decisión comercial"};
 const CAT={exportacion:["Exportación","--c-exp"],mercado_nacional:["Mercado nacional","--c-nac"],proceso:["Proceso","--c-pro"],rechazo:["Rechazo","--c-rec"],revision_manual:["Revisión manual","--c-rev"]};
 const TXT={aceptada:"Aceptada",repetir:"Repetir captura",revision:"En revisión",alta:"Alta",media:"Media",baja:"Baja",defectos_visibles:"Defectos visibles",grande:"Grande",mediano:"Mediano",pequeno:"Pequeño",uniforme:"Uniforme",irregular:"Irregular",normal:"Normal",falla_mecanica:"Falla mecánica"};
 const t=k=>TXT[k]||k;
@@ -428,7 +428,7 @@ const gen={
        let c=clamp(gauss(.88,.06),.5,.99); if(S.lowconf||rnd()<.05)c=clamp(gauss(.6,.06),.4,.69);
        const d=calidad==="alta"?(rnd()<.15?["mancha_leve"]:[]):calidad==="media"?[pick([["mancha_leve",3],["madurez_desigual",2]])]:calidad==="revision"?[]:[pick([["golpe",2],["antracnosis",1],["piel_danada",2]])];
        return{calidad_visual:calidad,confianza_visual:+c.toFixed(2),defectos_detectados:d}},
-  E3(){const g=Math.round(clamp(gauss(1050,170),550,1650));return{peso_g:g,calibre:g>=1200?"grande":g>=850?"mediano":"pequeno"}},
+  E3(){const d=Math.round(clamp(gauss(102,11),70,135));return{diametro_mm:d,calibre:d>=112?"grande":d>=92?"mediano":"pequeno"}},
   E4(f){const e2=f.d.E2,e3=f.d.E3;let cat;
        if(!e2||!e3)cat="revision_manual";
        else if(e2.calidad_visual==="defectos_visibles")cat=rnd()<.55?"rechazo":"proceso";
@@ -441,7 +441,7 @@ const gen={
 };
 function rulesFruit(st,d){const a=[];
   if(st==="E2"){if(d.confianza_visual<.7)a.push(["alerta",`confianza baja (${dec(d.confianza_visual,2)})`]);if(d.calidad_visual==="defectos_visibles")a.push(["alerta","defectos visibles: "+defs(d.defectos_detectados)]);if(d.calidad_visual==="revision")a.push(["alerta","calidad visual en revisión"])}
-  if(st==="E3"){if(d.peso_g<650)a.push(["alerta",`peso bajo (${d.peso_g} g)`])}
+  if(st==="E3"){if(d.diametro_mm<80)a.push(["alerta",`bajo calibre mínimo (${d.diametro_mm} mm)`])}
   if(st==="E4"){if(d.categoria_final==="rechazo")a.push(["falla","rechazada"]);else if(d.requiere_revision_manual)a.push(["alerta","requiere revisión manual"])}
   return a}
 
@@ -459,7 +459,7 @@ function emit(g,k,when,live){
     if(live)S.last.E1={t:when,g,flag:worst};return}
   for(const f of g.fr){const d=gen[st](f);f.d[st]=d;S.msgs++;
     rulesFruit(st,d).forEach(x=>{f.an.push(x);flag(g,x[0],st,x[1],live,when,f.k);worst=worst==="falla"?"falla":x[0]})}
-  if(st==="E3"){const w=g.fr.map(f=>f.d.E3.peso_g),sp=Math.max(...w)-Math.min(...w);g.uni=sp>450?"irregular":"uniforme";if(g.uni==="irregular"){flag(g,"alerta",st,`Tamaños irregulares en el grupo (${sp} g de diferencia)`,live,when);worst=worst||"alerta"}}
+  if(st==="E3"){const w=g.fr.map(f=>f.d.E3.diametro_mm),sp=Math.max(...w)-Math.min(...w);g.uni=sp>28?"irregular":"uniforme";if(g.uni==="irregular"){flag(g,"alerta",st,`Tamaños irregulares en el grupo (${sp} mm de diferencia)`,live,when);worst=worst||"alerta"}}
   if(live)S.last[st]={t:when,g,flag:worst};
   if(st==="E2"){g.fr.forEach(f=>S.conf.push(f.d.E2.confianza_visual));while(S.conf.length>12)S.conf.shift();
     const low=S.conf.filter(c=>c<.7).length;
@@ -529,7 +529,7 @@ function marks(){beltrow.querySelectorAll(".mark").forEach(m=>m.remove());
 const EST={ok:["ok","Aprobado"],anomalia:["alerta","Con anomalía"],rechazo:["falla","Con rechazo"],proceso:["","En proceso"]};
 const catCount=g=>{const c={};g.fr.forEach(f=>{const k=f.d.E4&&f.d.E4.categoria_final;if(k)c[k]=(c[k]||0)+1});return c};
 const dots=g=>`<span class="dots">${g.fr.map(f=>{const k=f.d.E4&&f.d.E4.categoria_final;return `<i style="--c:var(${k?CAT[k][1]:"--off"})" title="${f.k}: ${k?CAT[k][0]:"sin dato"}"></i>`}).join("")}</span>`;
-const pesoTot=g=>g.fr.every(f=>f.d.E3)?g.fr.reduce((s,f)=>s+f.d.E3.peso_g,0):null;
+const diamMed=g=>g.fr.every(f=>f.d.E3)?Math.round(g.fr.reduce((s,f)=>s+f.d.E3.diametro_mm,0)/g.n):null;
 
 const render={
   cards(){
@@ -544,15 +544,15 @@ const render={
       if(lg){
         if(st==="E1"){const d=lg.e1;body=d?`<div class="kv"><span>Imagen</span><b class="${d.validez_imagen?"":"x"}">${d.validez_imagen?"Válida":"No válida"}</b><span>Captura</span><b class="${d.estado_captura==="aceptada"?"":"w"}">${t(d.estado_captura)}</b><span>Posición</span><b class="${d.posicion_correcta?"":"w"}">${d.posicion_correcta?"Correcta":"Incorrecta"}</b><span>Frutas detectadas</span><b>${d.frutas_detectadas}</b></div>`:""}
         else{const rows=lg.fr.map(f=>{const d=f.d[st];if(!d)return `<li><span class="p"></span><span class="k">${f.k}</span><span class="v">Sin dato</span><span class="n"></span></li>`;
-            const an=f.an.filter(a=>st==="E2"?/confianza|defectos|calidad/.test(a[1]):st==="E3"?/peso/.test(a[1]):/rechazada|revisión manual/.test(a[1]));
+            const an=f.an.filter(a=>st==="E2"?/confianza|defectos|calidad/.test(a[1]):st==="E3"?/calibre/.test(a[1]):/rechazada|revisión manual/.test(a[1]));
             const cls=an.some(a=>a[0]==="falla")?"falla":an.length?"alerta":"";
             let v,n;
             if(st==="E2"){v=t(d.calidad_visual);n=`<span class="bar" style="--v:${d.confianza_visual*100}%"></span>${dec(d.confianza_visual,2)}`}
-            else if(st==="E3"){v=t(d.calibre);n=d.peso_g.toLocaleString("es-CL")+" g"}
+            else if(st==="E3"){v=t(d.calibre);n=d.diametro_mm+" mm"}
             else{v=`<span style="color:var(${CAT[d.categoria_final][1]})">${CAT[d.categoria_final][0]}</span>`;n=dec(d.probabilidad,2)}
             return `<li class="${cls}"><span class="p"></span><span class="k">${f.k}</span><span class="v">${v}</span><span class="n">${n}</span></li>`}).join("");
           let sum="";
-          if(st==="E3"){const p=pesoTot(lg);sum=p?`<div class="sumline">Grupo <b>${dec(p/1000,2)} kg</b>, ${t(lg.uni||"").toLowerCase()}</div>`:""}
+          if(st==="E3"){const p=diamMed(lg);sum=p?`<div class="sumline">Diámetro medio <b>${p} mm</b>, ${t(lg.uni||"").toLowerCase()}</div>`:""}
           if(st==="E2"){const c=lg.fr.map(f=>f.d.E2&&f.d.E2.confianza_visual).filter(x=>x!=null);sum=c.length?`<div class="sumline">Confianza media <b>${dec(c.reduce((a,b)=>a+b,0)/c.length,2)}</b></div>`:""}
           if(st==="E4"){const c=catCount(lg);sum=`<div class="sumline">${Object.entries(c).map(([k,v])=>`<b>${v}</b> ${CAT[k][0].toLowerCase()}`).join(", ")}</div>`}
           body=`<ul class="frl">${rows}</ul>${sum}`}
@@ -588,8 +588,8 @@ const render={
     const secs=Math.round((Date.now()-g.realT0)/1000);
     $("gfacts").innerHTML=`<span><b>${g.n}</b> frutas</span><span>Entró <b>${hhmmss(g.realT0)}</b></span><span><b>${secs} s</b> en línea</span><span class="verdict ${fin==="proceso"?"":fin}">${EST[fin][1]}</span>`},
   hist(){
-    $("hist").innerHTML=S.hist.slice(0,12).map(g=>{const e=EST[g.estado],p=pesoTot(g);
-      return `<tr class="${g.id===S.freshId?"fresh":""}"><td class="id">${g.id}</td><td>${hhmmss(g.out)}</td><td>${dots(g)} <span style="color:var(--muted)">${g.n}</span></td><td class="r">${p?dec(p/1000,2)+" kg":"—"}</td><td><span class="est"><span class="light ${e[0]}"></span>${e[1]}</span></td></tr>`}).join("");
+    $("hist").innerHTML=S.hist.slice(0,12).map(g=>{const e=EST[g.estado],p=diamMed(g);
+      return `<tr class="${g.id===S.freshId?"fresh":""}"><td class="id">${g.id}</td><td>${hhmmss(g.out)}</td><td>${dots(g)} <span style="color:var(--muted)">${g.n}</span></td><td class="r">${p?p+" mm":"—"}</td><td><span class="est"><span class="light ${e[0]}"></span>${e[1]}</span></td></tr>`}).join("");
     $("histCount").textContent=`${S.hist.length} grupos, ${S.hist.reduce((s,g)=>s+g.n,0).toLocaleString("es-CL")} frutas en el turno`},
   alerts(){
     $("alerts").innerHTML=S.alerts.slice(0,8).map(a=>`<li class="${a.sev}"><span class="when">${hhmm(a.t)}</span><span class="msg">${esc(a.msg.charAt(0).toUpperCase()+a.msg.slice(1))}</span><span class="who">${a.st} (${NAMES[a.st].toLowerCase()})${a.ref?", grupo "+a.ref:""}</span></li>`).join("");
