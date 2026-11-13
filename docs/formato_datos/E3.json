@@ -1,12 +1,11 @@
 {
-  "id_lote": "LOTE-2026-10-A",
-  "id_caja": "CAJA-0047",
-  "timestamp": "2026-10-18T10:16:40Z",
+  "id_lote": "LOTE-2026-11-A",
+  "id_grupo": "G-0001",
   "estacion": "E3",
-  "datos": {
-    "peso_total_kg": 4.85,
-    "nivel_llenado": "adecuado",
-    "cantidad_frutas_visibles": 8,
-    "consistencia_fisica": "consistente"
-  }
+  "timestamp": "2026-11-18T10:16:40Z",
+  "frutas": [
+    { "id_fruta": "F1", "diametro_mm": 40, "tamano": "mediano" },
+    { "id_fruta": "F2", "diametro_mm": 47, "tamano": "grande" },
+    { "id_fruta": "F3", "diametro_mm": 33, "tamano": "pequeno" }
+  ]
 }

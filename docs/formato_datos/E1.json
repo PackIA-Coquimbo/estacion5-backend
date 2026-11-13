@@ -1,11 +1,12 @@
 {
-  "id_lote": "LOTE-2026-10-A",
-  "id_caja": "CAJA-0047",
-  "timestamp": "2026-10-18T10:15:30Z",
+  "id_lote": "LOTE-2026-11-A",
+  "id_grupo": "G-0001",
   "estacion": "E1",
+  "timestamp": "2026-11-18T10:15:30Z",
   "datos": {
     "validez_imagen": true,
     "estado_captura": "aceptada",
-    "posicion_correcta": true
+    "posicion_correcta": true,
+    "frutas_detectadas": 3
   }
 }
