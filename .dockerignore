@@ -5,3 +5,13 @@ __pycache__/
 .git 
 .gitignore
 .env
+
+# Entorno local, tests y documentación: no van en la imagen
+.venv
+venv
+.pytest_cache
+tests
+tools
+docs
+*.db
+*.sqlite3
