@@ -1,5 +1,7 @@
 # Plan individual — Rol C: Dashboard
 
+**Dueño: Christian**
+
 **Dueño de:** `frontend/`
 **Revisa PRs de:** B · **Tus PRs los revisa:** A
 **Meta del sprint de recuperación (5 días):** el dashboard deja de usar datos simulados internos y muestra los de la API real (alimentada por el simulador de B), con alertas, estado de estaciones y trazabilidad de un grupo.
@@ -62,3 +64,8 @@
 - La API de A llega tarde → trabajar contra los JSON de ejemplo en `docs/formato_datos/` y el modo `?sim=1`.
 - Un cambio de campo rompe la pantalla → todo acceso a datos pasa por `api.js`, así el cambio se hace en un solo lugar.
 - Rendimiento en la Raspberry Pi → evitar redibujar toda la tabla en cada *polling*; actualizar solo lo que cambió.
+
+## Añadido: monitor y kiosko en la Raspberry Pi 5
+- [ ] Script de arranque: `chromium-browser --kiosk --noerrdialogs --disable-infobars http://localhost:8000/`, ejecutado automáticamente al encender la Pi.
+- [ ] Panel de la Pi con datos reales de `/api/v1/sistema` (reemplaza los simulados).
+- [ ] Probar en el monitor real: resolución, tamaños de letra, contraste y distancia de lectura.

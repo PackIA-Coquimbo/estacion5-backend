@@ -1,5 +1,7 @@
 # Plan individual — Rol B: Integración y calidad
 
+**Dueño: Maicol**
+
 **Dueño de:** contratos JSON (`docs/formato_datos/`), `tests/`, `tools/simulador.py`, Docker, coordinación con otras estaciones
 **Revisa PRs de:** A · **Tus PRs los revisa:** C
 **Meta del sprint de recuperación (5 días):** contratos cerrados con las otras estaciones, simulador funcionando, tests que protegen la API y una primera integración real con E4 y E6.
@@ -68,3 +70,9 @@
 ## Riesgos propios
 - Los otros grupos no responden → avanzar con la decisión por defecto, dejarla escrita y avisar en el chat. No bloquear a A y C.
 - Los tests dependen de la BD de A → empezar por los tests de validación (422/201), que no la necesitan.
+
+## Añadido: despliegue en Raspberry Pi 5
+- [ ] Compose con `restart: unless-stopped`, volumen persistente para la BD y `healthcheck`; sin `--reload` en producción.
+- [ ] Probar `docker compose up --build` **en la Pi** (ARM64, OS de 64 bits).
+- [ ] Configurar NTP e IP fija; pasar la IP a las otras estaciones.
+- [ ] Respaldo periódico de la BD si se usa tarjeta SD.

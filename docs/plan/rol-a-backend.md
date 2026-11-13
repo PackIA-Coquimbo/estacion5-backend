@@ -1,5 +1,7 @@
 # Plan individual — Rol A: Backend y datos
 
+**Dueño: Gabriel**
+
 **Dueño de:** `app/` (schemas, BD, endpoints, reglas)
 **Revisa PRs de:** C · **Tus PRs los revisa:** B
 **Meta del sprint de recuperación (5 días):** la API guarda en BD con contratos v2 y expone consultas, métricas y alertas para que C conecte el dashboard.
@@ -65,3 +67,8 @@
 ## Riesgos propios
 - Los otros grupos cambian campos → todo cambio entra primero al contrato JSON y se avisa.
 - Mensajes de E2–E4 llegan antes que E1 → el *upsert* debe crear el grupo si no existe.
+
+## Añadido: despliegue en Raspberry Pi 5
+- [ ] SQLite con `PRAGMA journal_mode=WAL` como base por defecto (PostgreSQL solo si `DATABASE_URL` lo indica).
+- [ ] Servir `frontend/` desde la API con `StaticFiles` (en `/`), sin romper `/docs` ni `/api/v1`.
+- [ ] `GET /api/v1/sistema`: temperatura, CPU y RAM reales (`psutil`) para el panel de la Pi. Día 3–4.

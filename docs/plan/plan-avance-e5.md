@@ -24,9 +24,9 @@ Cada persona es **dueña** de un área (decide y revisa en ella), pero todos pro
 
 | Rol | Persona | Es dueño de | Revisa PRs de |
 |---|---|---|---|
-| **A — Backend y datos** | _(nombre)_ | `app/` (modelos, BD, endpoints de ingesta y consulta) | C |
-| **B — Integración y calidad** | _(nombre)_ | Contratos JSON, tests, simulador de estaciones, coordinación con E1–E4 y E6, Docker | A |
-| **C — Dashboard** | _(nombre)_ | `frontend/` (pantalla de supervisión, conexión a la API, tiempo real) | B |
+| **A — Backend y datos** | Gabriel | `app/` (modelos, BD, endpoints de ingesta y consulta) | C |
+| **B — Integración y calidad** | Maicol | Contratos JSON, tests, simulador de estaciones, coordinación con E1–E4 y E6, Docker | A |
+| **C — Dashboard** | Christian | `frontend/` (pantalla de supervisión, conexión a la API, tiempo real) | B |
 
 > B es además el **punto de contacto** con los otros grupos: acuerda campos, envía ejemplos y agenda las pruebas de integración.
 
@@ -146,7 +146,7 @@ erDiagram
 - `LECTURA` guarda **todo** lo que llega tal cual (auditoría y reproceso).
 - `FRUTA` tiene restricción única `(id_grupo, id_fruta)`. Si llega una lectura repetida, **se actualiza la fila (*upsert*), no se duplica**.
 - Si llega un grupo o lote desconocido, se crea automáticamente. Así el orden de llegada no rompe la ingesta.
-- Herramientas: **SQLAlchemy 2.0** y **SQLite** en desarrollo (archivo `e5.db`); **PostgreSQL** en Docker para la demo. Alembic es opcional: con `create_all` alcanza hasta la Semana 6.
+- Herramientas: **SQLAlchemy 2.0** y **SQLite** (modo WAL) tanto en desarrollo como en la Raspberry Pi 5 (ver sección 9). PostgreSQL queda como opción mediante `DATABASE_URL`. Alembic es opcional: con `create_all` alcanza hasta la Semana 6.
 
 ---
 
@@ -291,9 +291,33 @@ Cada tarjeta lleva la letra del dueño ([A], [B] o [C]), la semana y su criterio
 
 ## 8. Checklist inmediato (esta semana)
 
-- [ ] **Todos:** asignar nombres a los roles A, B y C en la sección 1.
+- [x] **Todos:** roles asignados: A = Gabriel, B = Maicol, C = Christian.
 - [ ] **B:** enviar la sección 2 a los grupos E1–E4 y E6 y cerrar las preguntas abiertas.
 - [ ] **A:** crear la rama `feat/a-contratos-v2` con los nuevos `schemas.py`.
 - [ ] **B:** crear la rama `feat/b-simulador`.
 - [ ] **C:** crear la rama `feat/c-prototipo-v2-contratos`.
 - [ ] **Todos:** crear las tarjetas de la Semana 3 en Trello a partir de la tabla de la sección 5.
+
+---
+
+## 9. Despliegue en Raspberry Pi 5 (con monitor)
+
+La Pi 5 es el equipo de E5: corre la API y la base de datos, y muestra el dashboard en un **monitor conectado por HDMI** en modo kiosko (Chromium a pantalla completa, sin barras ni pestañas).
+
+| Tema | Decisión |
+|---|---|
+| Sistema | Raspberry Pi OS de **64 bits** (la imagen `python:3.11-slim` y las dependencias tienen versión ARM64). |
+| Base de datos | **SQLite en modo WAL** en un volumen persistente (menos RAM que PostgreSQL). Preferir SSD; con tarjeta SD, hacer respaldos periódicos. |
+| Arranque | `restart: unless-stopped` en `docker-compose.yml` y Docker habilitado al inicio. Sin `--reload` en producción. |
+| Dashboard | La API sirve `frontend/` (`StaticFiles`) y Chromium abre `http://localhost:8000/` en kiosko al encender la Pi. |
+| Red | IP fija para la Pi; las otras estaciones y el parámetro `?api=` usan esa IP. |
+| Hora | NTP activo; si la Pi arranca sin red, la hora de recepción sirve de respaldo al `timestamp` de la estación. |
+| Monitoreo | Endpoint con temperatura, CPU y RAM **reales** (`psutil`) para el panel de la Pi, y `healthcheck` en el compose. |
+
+| Quién | Tarea | Cuándo |
+|---|---|---|
+| Maicol (B) | Compose con `restart`, volumen de la BD, sin `--reload`, `healthcheck`; probar `docker compose up` **en la Pi**; configurar NTP e IP fija. | Día 4–5 |
+| Gabriel (A) | SQLite con WAL por defecto; `StaticFiles` para servir el frontend; endpoint `GET /api/v1/sistema` con métricas reales de la Pi. | Día 3–4 |
+| Christian (C) | Script de kiosko (`chromium-browser --kiosk --noerrdialogs --disable-infobars http://localhost:8000/`) con arranque automático; panel de la Pi con datos reales; probar tamaños en el monitor real. | Día 4–5 |
+
+**Probar en la Pi real antes de la Semana 6**, no dejarlo para la demo.
