@@ -170,4 +170,4 @@ Según `docs/plan/rol-c-dashboard.md`:
 | `34e0c09` | agrega registro de avance del dashboard |
 | `3869111` | agrega versiones de prototipo 2 y 3 adaptables a monitor vertical |
 
-Los cambios de esta rama aún no se han subido a GitHub.
+La rama está subida a GitHub y lista para el PR a `main`.
