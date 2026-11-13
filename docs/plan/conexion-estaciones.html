@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Red de Estación 5</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+  /* Layout: maqueta 3D de la línea a todo el ancho (estaciones de perfil de aluminio y acrílico, tubería PVC por detrás);
+     debajo, registro de mensajes y leyenda en dos columnas. */
+  :root {
+    --bg: #E9EEF3;
+    --panel: #FFFFFF;
+    --ink: #17212C;
+    --muted: #5A6776;
+    --line: #D2DAE3;
+    --pvc: #F26A1B;
+    --pvc-edge: #1F5FD1;
+    --cable: #FFFFFF;
+    --signal: #0E9F8E;
+    --alu: #CDD5DE;
+    --alu-dark: #6F7C8B;
+    --glass-front: rgba(140, 185, 225, .13);
+    --glass-side: rgba(120, 165, 210, .22);
+    --glass-top: rgba(170, 205, 235, .30);
+    --glass-back: rgba(120, 165, 210, .10);
+    --dev: #2C3744; --dev-side: #1F2833; --dev-top: #3B4856;
+    --belt: #2A3038; --belt-top: #3B434D; --slat: #555F6B;
+    --desk: #D5DCE4; --desk-top: #EEF2F6; --desk-side: #BFC8D2;
+    --screen: #101A26; --screen-ink: #D7E2EE; --screen-dim: #6F8094;
+    --floor: rgba(40, 70, 110, .07);
+    --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+    --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D141C; --panel: #141E29; --ink: #DCE4EE; --muted: #91A0B2; --line: #263445;
+      --pvc: #FF7A2F; --pvc-edge: #4C8DFF; --cable: #EEF3F8; --signal: #2DD4BF;
+      --alu: #8996A5; --alu-dark: #3A4757;
+      --glass-front: rgba(110, 160, 215, .08); --glass-side: rgba(110, 160, 215, .14);
+      --glass-top: rgba(140, 185, 230, .18); --glass-back: rgba(110, 160, 215, .06);
+      --dev: #3A4756; --dev-side: #2B3644; --dev-top: #4A5868;
+      --belt: #1A1F25; --belt-top: #2A3139; --slat: #3E4853;
+      --desk: #233142; --desk-top: #2D3D50; --desk-side: #1B2734;
+      --screen: #070D14; --screen-ink: #D7E2EE; --screen-dim: #66778B;
+      --floor: rgba(120, 160, 210, .05);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0D141C; --panel: #141E29; --ink: #DCE4EE; --muted: #91A0B2; --line: #263445;
+    --pvc: #FF7A2F; --pvc-edge: #4C8DFF; --cable: #EEF3F8; --signal: #2DD4BF;
+    --alu: #8996A5; --alu-dark: #3A4757;
+    --glass-front: rgba(110, 160, 215, .08); --glass-side: rgba(110, 160, 215, .14);
+    --glass-top: rgba(140, 185, 230, .18); --glass-back: rgba(110, 160, 215, .06);
+    --dev: #3A4756; --dev-side: #2B3644; --dev-top: #4A5868;
+    --belt: #1A1F25; --belt-top: #2A3139; --slat: #3E4853;
+    --desk: #233142; --desk-top: #2D3D50; --desk-side: #1B2734;
+    --screen: #070D14; --screen-ink: #D7E2EE; --screen-dim: #66778B;
+    --floor: rgba(120, 160, 210, .05);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--font-body);
+    padding-block: 32px 44px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; display: grid; gap: 22px; }
+  .eyebrow { font: 500 11px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  h1 { font: 600 clamp(1.6rem, 1.15rem + 1.8vw, 2.35rem)/1.1 var(--font-display); margin: 8px 0 0; letter-spacing: -0.02em; text-wrap: balance; }
+  .sub { margin: 10px 0 0; color: var(--muted); max-width: 66ch; line-height: 1.55; font-size: 15px; }
+
+  .stage { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 12px; }
+  .scroll { overflow-x: auto; }
+  svg.plan { display: block; width: 100%; min-width: 820px; height: auto; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; padding: 12px 4px 2px; font-size: 14px; border-top: 1px solid var(--line); margin-top: 8px; }
+  .controls label { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
+  .controls input { accent-color: var(--pvc-edge); width: 16px; height: 16px; margin: 0; }
+  .controls input:focus-visible { outline: 2px solid var(--pvc-edge); outline-offset: 2px; }
+  .controls .hint { color: var(--muted); margin-left: auto; font-size: 13px; }
+
+  /* maqueta */
+  .floor { fill: var(--floor); }
+  .alu-o { fill: none; stroke: var(--alu-dark); stroke-width: 7; stroke-linecap: round; }
+  .alu-i { fill: none; stroke: var(--alu); stroke-width: 4; stroke-linecap: round; }
+  .alu-back { fill: none; stroke: var(--alu-dark); stroke-width: 3; stroke-linecap: round; opacity: .55; }
+  .g-front { fill: var(--glass-front); } .g-side { fill: var(--glass-side); }
+  .g-top { fill: var(--glass-top); } .g-back { fill: var(--glass-back); }
+  .station { cursor: pointer; outline: none; }
+  .station:focus-visible .alu-i { stroke: var(--pvc-edge); }
+  .station .flash { fill: var(--signal); opacity: 0; transition: opacity .6s; pointer-events: none; }
+  .station.on .flash { opacity: .16; transition: opacity .08s; }
+  .d-front { fill: var(--dev); } .d-side { fill: var(--dev-side); } .d-top { fill: var(--dev-top); }
+  .led { fill: #4B5866; transition: fill .2s; }
+  .led.on { fill: var(--signal); }
+  .tag { font: 700 26px var(--font-display); fill: var(--ink); text-anchor: middle; }
+  .role { font: 500 11px var(--font-mono); fill: var(--muted); text-anchor: middle; letter-spacing: .08em; text-transform: uppercase; }
+  .b-front { fill: var(--belt); } .b-top { fill: var(--belt-top); } .slat { stroke: var(--slat); stroke-width: 2; }
+  .leg { stroke: var(--alu-dark); stroke-width: 5; stroke-linecap: round; }
+  .pipe-edge { fill: none; stroke: var(--pvc-edge); stroke-width: 19; stroke-linejoin: round; stroke-linecap: round; }
+  .pipe-core { fill: none; stroke: var(--pvc); stroke-width: 12; stroke-linejoin: round; stroke-linecap: round; transition: opacity .3s; }
+  .pipe-hi { fill: none; stroke: #FFFFFF; stroke-opacity: .28; stroke-width: 2.5; stroke-linejoin: round; transition: opacity .3s; }
+  .cable { fill: none; stroke: var(--cable); stroke-width: 2.5; stroke-dasharray: 1 5; stroke-linecap: round; opacity: 0; transition: opacity .3s; }
+  .show-cable .cable { opacity: 1; }
+  .show-cable .pipe-core { opacity: .28; }
+  .show-cable .pipe-hi { opacity: 0; }
+  .sleeve { fill: var(--pvc); stroke: var(--pvc-edge); stroke-width: 3.5; }
+  .patch { fill: none; stroke: var(--pvc-edge); stroke-width: 3; stroke-linecap: round; }
+  .k-front { fill: var(--desk); } .k-top { fill: var(--desk-top); } .k-side { fill: var(--desk-side); }
+  .desk-label { font: 500 11px var(--font-mono); fill: var(--muted); text-anchor: middle; letter-spacing: .08em; text-transform: uppercase; }
+  .scr { fill: var(--screen); }
+  .bezel { fill: none; stroke: var(--dev); stroke-width: 6; stroke-linejoin: round; }
+  .bezel.pulse { animation: pulse .9s ease-out; }
+  @keyframes pulse { from { stroke: var(--signal); } to { stroke: var(--dev); } }
+  .st { font: 500 9px var(--font-mono); fill: var(--screen-ink); }
+  .st-dim { font: 400 8px var(--font-mono); fill: var(--screen-dim); }
+  .st-head { font: 600 9px var(--font-display); fill: var(--screen-ink); letter-spacing: .06em; }
+  .sdot { fill: #3B4A5B; transition: fill .2s; } .sdot.on { fill: var(--signal); }
+  .packet { fill: var(--signal); stroke: #FFFFFF; stroke-width: 2; }
+  .halo { fill: var(--signal); opacity: .3; }
+  .callout { font: 500 11px var(--font-mono); fill: var(--muted); letter-spacing: .04em; }
+  .callout-line { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 3; fill: none; }
+
+  .cols { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 22px; }
+  @media (max-width: 880px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; min-width: 0; }
+  .card h2 { font: 600 16px var(--font-display); margin: 0 0 4px; }
+  .card p.note { margin: 0 0 14px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+  ul.log { list-style: none; margin: 0; padding: 0; min-height: 214px; }
+  ul.log li { font: 400 12.5px/1.45 var(--font-mono); padding: 8px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: auto 2.4em minmax(0, 1fr); gap: 2px 12px; }
+  ul.log li:first-child { border-top: 0; }
+  ul.log .t { color: var(--muted); font-variant-numeric: tabular-nums; }
+  ul.log .s { font-weight: 500; color: var(--signal); }
+  ul.log .m { overflow-wrap: anywhere; }
+  ul.log .r { grid-column: 3; color: var(--muted); font-size: 11.5px; }
+  ul.log .empty { display: block; color: var(--muted); font: 13px var(--font-body); border: 0; }
+  .tbl { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 12px 8px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 500; color: var(--muted); font-size: 12px; border-top: 0; }
+  td:first-child { font-family: var(--font-display); font-weight: 600; }
+  td code { font: 400 12px var(--font-mono); overflow-wrap: anywhere; }
+  .key { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; font-size: 13px; color: var(--muted); margin-top: 16px; }
+  .key span { display: inline-flex; align-items: center; gap: 8px; }
+  .sw { width: 34px; height: 13px; background: var(--pvc); border: 3px solid var(--pvc-edge); border-radius: 7px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--signal); }
+  .foot { font-size: 12.5px; color: var(--muted); line-height: 1.55; margin: 0; }
+  .foot code { font-family: var(--font-mono); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">PackIA · Estación 5 · Propuesta de montaje</div>
+    <h1>Cómo se conectan las estaciones con E5</h1>
+    <p class="sub">El cable de red de cada estación sale por detrás y corre dentro de un tubo PVC naranjo con borde azul. Todos los tubos se unen en un troncal que pasa por la espalda de la línea y termina en el switch, junto a la Raspberry Pi de E5.</p>
+  </header>
+
+  <section class="stage" aria-label="Maqueta de la línea con la tubería de red">
+    <div class="scroll">
+      <svg class="plan" id="plan" viewBox="0 0 1380 372" role="img" aria-label="Cinta transportadora que pasa por las estaciones E1 a E4. Detrás de ellas corre un tubo PVC que lleva los cables de red hasta el switch y la Raspberry Pi de E5."></svg>
+    </div>
+    <div class="controls">
+      <label><input type="checkbox" id="optRun"> Cinta en marcha</label>
+      <label><input type="checkbox" id="optCable"> Ver el cable dentro del tubo</label>
+      <span class="hint">Toca una estación para enviar un mensaje. Los datos son de ejemplo.</span>
+    </div>
+  </section>
+
+  <div class="cols">
+    <section class="card">
+      <h2>Mensajes que llegan a E5</h2>
+      <p class="note">Cuando un grupo de frutas pasa por una estación, esa estación hace un POST de JSON a la API de la Raspberry Pi.</p>
+      <ul class="log" id="log" aria-live="polite"><li class="empty">Todavía no llega ningún mensaje. Pon la cinta en marcha o toca una estación.</li></ul>
+    </section>
+    <section class="card">
+      <h2>Qué lleva cada tubo</h2>
+      <p class="note">Un cable de red (Ethernet) por estación, desde su equipo hasta el switch.</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Estación</th><th>Envía</th><th>Ruta en E5</th></tr></thead>
+          <tbody>
+            <tr><td>E1</td><td>Recepción y captura del grupo</td><td><code>/api/v1/ingest/e1</code></td></tr>
+            <tr><td>E2</td><td>Calidad visual por fruta</td><td><code>/api/v1/ingest/e2</code></td></tr>
+            <tr><td>E3</td><td>Diámetro y tamaño por fruta</td><td><code>/api/v1/ingest/e3</code></td></tr>
+            <tr><td>E4</td><td>Categoría final</td><td><code>/api/v1/ingest/e4</code></td></tr>
+            <tr><td>E6</td><td>Estado de la cinta</td><td><code>/api/v1/ingest/e6</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="key">
+        <span><i class="sw"></i> Tubo PVC con cable de red</span>
+        <span><i class="dot"></i> Mensaje en camino</span>
+      </div>
+    </section>
+  </div>
+  <p class="foot">Detalle de la propuesta en <code>docs/plan/conexion-estaciones.md</code>: IP fija para la Pi y reintentos en cada estación si E5 no responde. El largo de los tubos y el lugar del switch se ajustan cuando se defina dónde queda cada estación.</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var NS = "http://www.w3.org/2000/svg";
+  var svg = document.getElementById("plan");
+
+  /* Proyección oblicua: x a lo largo de la línea, y altura, z profundidad (0 = frente). */
+  var OX = 190, OY = 348, KX = 0.5, KY = 0.32;
+  function P(x, y, z) { return [OX + x + KX * z, OY - y - KY * z]; }
+  function pts(list) { return list.map(function (p) { var q = P(p[0], p[1], p[2]); return q[0].toFixed(1) + "," + q[1].toFixed(1); }).join(" "); }
+  function d3(list) { return list.map(function (p, i) { var q = P(p[0], p[1], p[2]); return (i ? "L" : "M") + q[0].toFixed(1) + " " + q[1].toFixed(1); }).join(""); }
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function poly(list, cls, parent) { return el("polygon", { points: pts(list), "class": cls }, parent); }
+  function line(a, b, cls, parent) { return el("path", { d: d3([a, b]), "class": cls }, parent); }
+  /* Caja sólida: se ven la cara derecha, la superior y la frontal. */
+  function solid(x0, x1, y0, y1, z0, z1, pre, parent) {
+    var g = el("g", {}, parent);
+    poly([[x1, y0, z0], [x1, y0, z1], [x1, y1, z1], [x1, y1, z0]], pre + "-side", g);
+    poly([[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], pre + "-top", g);
+    poly([[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0]], pre + "-front", g);
+    return g;
+  }
+
+  var defs = el("defs", {}, svg);
+  [["fr0", "#F7A79C", "#D8402F", "#8E2318"], ["fr1", "#FFD38A", "#F0A12E", "#A9620E"], ["fr2", "#C9E59A", "#79B33B", "#3F6E17"]].forEach(function (c) {
+    var g = el("radialGradient", { id: c[0], cx: "35%", cy: "32%", r: "70%" }, defs);
+    el("stop", { offset: "0", "stop-color": c[1] }, g);
+    el("stop", { offset: ".55", "stop-color": c[2] }, g);
+    el("stop", { offset: "1", "stop-color": c[3] }, g);
+  });
+
+  /* Medidas (unidades de maqueta) */
+  var SW = 150, SD = 110, SH = 250, GAP = 215;
+  var PIPE_Y = 200, PIPE_Z = 140, BELT_Y = 100, BELT_X0 = -90, BELT_X1 = 860;
+  var DROP_X = 950;
+  var ST = [
+    { id: "E1", role: "Recepción", route: "/api/v1/ingest/e1" },
+    { id: "E2", role: "Análisis visual", route: "/api/v1/ingest/e2" },
+    { id: "E3", role: "Diámetro y tamaño", route: "/api/v1/ingest/e3" },
+    { id: "E4", role: "Clasificación", route: "/api/v1/ingest/e4" }
+  ];
+  ST.forEach(function (s, i) { s.x0 = i * GAP; s.x1 = s.x0 + SW; s.cx = s.x0 + SW / 2; });
+  var E6 = { id: "E6", role: "Cinta", route: "/api/v1/ingest/e6", x0: -165, x1: -100, cx: -132 };
+
+  /* Capas, de atrás hacia adelante */
+  var L = {};
+  ["floor", "pipes", "packets", "back", "inner", "belt", "fruit", "front", "e5", "labels"].forEach(function (n) { L[n] = el("g", {}, svg); });
+
+  /* Piso */
+  poly([[-200, 0, -18], [1150, 0, -18], [1150, 0, 175], [-200, 0, 175]], "floor", L.floor);
+
+  /* Tubería PVC: troncal por la espalda de la línea, derivaciones a cada estación y bajada a E5 */
+  var routes = [];
+  routes.push([[E6.cx, 110, 100], [E6.cx, 110, PIPE_Z], [E6.cx, PIPE_Y, PIPE_Z]]);
+  routes.push([[E6.cx, PIPE_Y, PIPE_Z], [DROP_X, PIPE_Y, PIPE_Z]]);
+  ST.forEach(function (s) { routes.push([[s.cx, PIPE_Y, SD - 4], [s.cx, PIPE_Y, PIPE_Z]]); });
+  routes.push([[DROP_X, PIPE_Y, PIPE_Z], [DROP_X, 98, PIPE_Z], [DROP_X, 98, 104]]);
+  var ds = routes.map(d3);
+  ["pipe-edge", "pipe-core", "pipe-hi", "cable"].forEach(function (c) {
+    ds.forEach(function (d) {
+      var p = el("path", { d: d, "class": c }, L.pipes);
+      if (c === "pipe-hi") p.setAttribute("transform", "translate(0,-3)");
+    });
+  });
+  function sleeve(x, y, z, w, h) { var q = P(x, y, z); el("rect", { x: q[0] - w / 2, y: q[1] - h / 2, width: w, height: h, rx: 4, "class": "sleeve" }, L.pipes); }
+  ST.forEach(function (s) { sleeve(s.cx, PIPE_Y, PIPE_Z, 26, 26); });
+  [182, 397, 612, 830, 30].forEach(function (x) { sleeve(x, PIPE_Y, PIPE_Z, 14, 24); });
+  sleeve(E6.cx, PIPE_Y, PIPE_Z, 24, 24);
+  sleeve(E6.cx, 110, PIPE_Z, 22, 22);
+
+  /* Estaciones: marco de perfil de aluminio con paneles de acrílico */
+  var stG = [], leds = [];
+  function station(s, i) {
+    var x0 = s.x0, x1 = s.x1, z1 = SD, h = SH;
+    poly([[x0, 0, z1], [x1, 0, z1], [x1, h, z1], [x0, h, z1]], "g-back", L.back);
+    [[[x0, 0, z1], [x1, 0, z1]], [[x0, 0, z1], [x0, h, z1]], [[x0, 0, z1], [x0, 0, 0]]].forEach(function (e) { line(e[0], e[1], "alu-back", L.back); });
+
+    /* Equipo de la estación, montado en el panel trasero; su cable sale por atrás hacia el tubo */
+    solid(s.cx - 30, s.cx + 30, PIPE_Y - 20, PIPE_Y + 18, SD - 14, SD - 2, "d", L.inner);
+    leds[i] = el("circle", Object.assign(xy(P(s.cx + 19, PIPE_Y + 6, SD - 14)), { r: 3.6, "class": "led" }), L.inner);
+
+    var g = el("g", { "class": "station", tabindex: "0", role: "button", "aria-label": "Enviar un mensaje de ejemplo desde " + s.id }, L.front);
+    poly([[x1, 0, 0], [x1, 0, z1], [x1, h, z1], [x1, h, 0]], "g-side", g);
+    poly([[x0, h, 0], [x1, h, 0], [x1, h, z1], [x0, h, z1]], "g-top", g);
+    poly([[x0, 0, 0], [x1, 0, 0], [x1, h, 0], [x0, h, 0]], "g-front", g);
+    el("polygon", { points: pts([[x0, 0, 0], [x1, 0, 0], [x1, h, 0], [x0, h, 0]]), "class": "flash" }, g);
+    var edges = [
+      [[x1, 0, 0], [x1, 0, z1]], [[x1, 0, z1], [x1, h, z1]], [[x0, h, z1], [x1, h, z1]], [[x0, h, 0], [x0, h, z1]],
+      [[x1, h, 0], [x1, h, z1]],
+      [[x0, 0, 0], [x1, 0, 0]], [[x0, h, 0], [x1, h, 0]], [[x0, 0, 0], [x0, h, 0]], [[x1, 0, 0], [x1, h, 0]]
+    ];
+    edges.forEach(function (e) { line(e[0], e[1], "alu-o", g); });
+    edges.forEach(function (e) { line(e[0], e[1], "alu-i", g); });
+    var lp = P(s.cx, h, SD / 2);
+    var t = el("text", { x: lp[0], y: lp[1] - 40, "class": "tag" }, L.labels); t.textContent = s.id;
+    var r = el("text", { x: lp[0], y: lp[1] - 22, "class": "role" }, L.labels); r.textContent = s.role;
+    g.addEventListener("click", function () { send(i); });
+    g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); send(i); } });
+    stG[i] = g;
+  }
+  function xy(q) { return { cx: q[0].toFixed(1), cy: q[1].toFixed(1) }; }
+  ST.forEach(station);
+
+  /* Cinta transportadora */
+  [-60, 182, 397, 612, 830].forEach(function (x) {
+    line([x, 0, 26], [x, BELT_Y - 12, 26], "leg", L.belt);
+    line([x, 0, 84], [x, BELT_Y - 12, 84], "leg", L.belt);
+  });
+  poly([[BELT_X0, BELT_Y, 20], [BELT_X1, BELT_Y, 20], [BELT_X1, BELT_Y, 90], [BELT_X0, BELT_Y, 90]], "b-top", L.belt);
+  var slats = [];
+  for (var k = 0; k < 34; k++) slats.push(el("path", { "class": "slat" }, L.belt));
+  poly([[BELT_X0, BELT_Y - 12, 20], [BELT_X1, BELT_Y - 12, 20], [BELT_X1, BELT_Y, 20], [BELT_X0, BELT_Y, 20]], "b-front", L.belt);
+  poly([[BELT_X1, BELT_Y - 12, 20], [BELT_X1, BELT_Y - 12, 90], [BELT_X1, BELT_Y, 90], [BELT_X1, BELT_Y, 20]], "b-front", L.belt);
+  var slatOff = 0;
+  function drawSlats() {
+    var span = BELT_X1 - BELT_X0, step = span / slats.length;
+    slats.forEach(function (sl, i) {
+      var x = BELT_X0 + ((i * step + slatOff) % span);
+      sl.setAttribute("d", d3([[x, BELT_Y, 22], [x, BELT_Y, 88]]));
+    });
+  }
+  drawSlats();
+
+  /* E6: motor de la cinta */
+  solid(E6.x0, E6.x1, 0, 125, 12, 100, "d", L.belt);
+  var e6led = el("circle", Object.assign(xy(P(E6.x1 - 14, 108, 12)), { r: 4, "class": "led" }), L.belt);
+  var e6p = P(E6.cx, 125, 56);
+  var t6 = el("text", { x: e6p[0], y: e6p[1] - 40, "class": "tag" }, L.labels); t6.textContent = "E6";
+  var r6 = el("text", { x: e6p[0], y: e6p[1] - 22, "class": "role" }, L.labels); r6.textContent = "Cinta";
+
+  /* E5: mesa con switch, Raspberry Pi y monitor */
+  solid(900, 1110, 0, 90, 0, 112, "k", L.e5);
+  var dl = P(1005, 40, 0);
+  var dlt = el("text", { x: dl[0], y: dl[1], "class": "desk-label" }, L.e5); dlt.textContent = "Switch · Raspberry Pi 5";
+  solid(918, 990, 90, 106, 68, 106, "d", L.e5);
+  for (var pI = 0; pI < 5; pI++) { var pp = P(925 + pI * 12, 96, 68); el("rect", { x: pp[0], y: pp[1] - 4, width: 7, height: 6, rx: 1, fill: "#0B1118" }, L.e5); }
+  el("path", { d: d3([[990, 99, 86], [1022, 99, 86]]), "class": "patch" }, L.e5);
+  solid(1022, 1080, 90, 110, 70, 104, "d", L.e5);
+  var piLed = el("circle", Object.assign(xy(P(1070, 100, 70)), { r: 3.4, "class": "led" }), L.e5);
+  solid(970, 1040, 90, 93, 28, 78, "d", L.e5);
+  solid(998, 1012, 93, 132, 50, 60, "d", L.e5);
+  solid(920, 1090, 128, 262, 40, 50, "d", L.e5);
+  var a = P(928, 254, 40), b = P(1082, 136, 40);
+  var SX = a[0], SY = a[1], SWD = b[0] - a[0], SHT = b[1] - a[1];
+  el("rect", { x: SX, y: SY, width: SWD, height: SHT, rx: 2, "class": "scr" }, L.e5);
+  var bezel = el("rect", { x: SX - 3, y: SY - 3, width: SWD + 6, height: SHT + 6, rx: 4, "class": "bezel" }, L.e5);
+  var h1 = el("text", { x: SX + 9, y: SY + 15, "class": "st-head" }, L.e5); h1.textContent = "E5 · SUPERVISIÓN";
+  var clock = el("text", { x: SX + SWD - 9, y: SY + 15, "class": "st-dim", "text-anchor": "end" }, L.e5);
+  var rows = ST.concat([E6]).map(function (s, i) {
+    var y = SY + 36 + i * 19;
+    var dot = el("circle", { cx: SX + 13, cy: y - 3, r: 3.5, "class": "sdot" }, L.e5);
+    var n = el("text", { x: SX + 22, y: y, "class": "st" }, L.e5); n.textContent = s.id;
+    var v = el("text", { x: SX + SWD - 9, y: y, "class": "st-dim", "text-anchor": "end" }, L.e5); v.textContent = "sin datos";
+    return { dot: dot, v: v };
+  });
+  var e5p = P(1005, 262, 45);
+  var t5 = el("text", { x: e5p[0], y: e5p[1] - 30, "class": "tag" }, L.labels); t5.textContent = "E5";
+  var r5 = el("text", { x: e5p[0], y: e5p[1] - 12, "class": "role" }, L.labels); r5.textContent = "Supervisión";
+
+  /* Rótulo del troncal, en el hueco entre E1 y E2 */
+  var cp = P(182, PIPE_Y, PIPE_Z);
+  el("path", { d: "M" + cp[0] + " " + (cp[1] - 13) + "V" + (cp[1] - 58) + "h14", "class": "callout-line" }, L.labels);
+  var ct = el("text", { x: cp[0] + 18, y: cp[1] - 54, "class": "callout" }, L.labels); ct.textContent = "Troncal PVC por detrás";
+
+  /* Rutas de cada mensaje: equipo → derivación → troncal → bajada → switch → Pi */
+  var tail = [[DROP_X, PIPE_Y, PIPE_Z], [DROP_X, 98, PIPE_Z], [DROP_X, 98, 86], [1050, 98, 86]];
+  var meas = ST.map(function (s) {
+    return el("path", { d: d3([[s.cx, PIPE_Y, SD - 2], [s.cx, PIPE_Y, PIPE_Z]].concat(tail)), fill: "none", stroke: "none" }, svg);
+  });
+  meas.push(el("path", { d: d3([[E6.cx, 110, 100], [E6.cx, 110, PIPE_Z], [E6.cx, PIPE_Y, PIPE_Z]].concat(tail)), fill: "none", stroke: "none" }, svg));
+  var allST = ST.concat([E6]);
+  var allLeds = leds.concat([e6led]);
+
+  /* Mensajes */
+  var logEl = document.getElementById("log");
+  function hora() { return new Date().toLocaleTimeString("es-CL", { hour12: false }); }
+  function tam(dm) { return dm < 92 ? "pequeno" : dm < 112 ? "mediano" : "grande"; }
+  function summary(i, grp) {
+    if (i === 4) return grp ? "estado_cinta: detenida" : "estado_cinta: normal";
+    if (!grp) grp = makeGroup(true);
+    var n = grp.fr.length;
+    if (i === 0) return grp.id + " · " + n + " frutas · captura aceptada";
+    if (i === 1) return grp.id + " · calidad " + grp.q + " · confianza " + grp.conf;
+    if (i === 2) {
+      var c = {}; grp.fr.forEach(function (f) { c[tam(f.d)] = (c[tam(f.d)] || 0) + 1; });
+      var avg = Math.round(grp.fr.reduce(function (s, f) { return s + f.d; }, 0) / n);
+      return grp.id + " · " + avg + " mm medio · " + Object.keys(c).map(function (k) { return c[k] + " " + k; }).join(", ");
+    }
+    var ex = grp.fr.filter(function (f) { return f.d >= 92; }).length;
+    return grp.id + " · " + ex + " exportacion" + (n - ex ? ", " + (n - ex) + " mercado_nacional" : "");
+  }
+  function arrive(i, text) {
+    var r = rows[i];
+    r.v.textContent = i === 4 ? text.replace("estado_cinta: ", "cinta ") : text.split(" · ")[0];
+    r.dot.classList.add("on"); setTimeout(function () { r.dot.classList.remove("on"); }, 800);
+    piLed.classList.add("on"); setTimeout(function () { piLed.classList.remove("on"); }, 300);
+    bezel.classList.remove("pulse"); void bezel.getBoundingClientRect(); bezel.classList.add("pulse");
+    var empty = logEl.querySelector(".empty"); if (empty) empty.remove();
+    var li = document.createElement("li");
+    li.innerHTML = '<span class="t"></span><span class="s"></span><span class="m"></span><span class="r"></span>';
+    li.children[0].textContent = hora();
+    li.children[1].textContent = allST[i].id;
+    li.children[2].textContent = text;
+    li.children[3].textContent = "POST " + allST[i].route + " → 200 OK";
+    logEl.insertBefore(li, logEl.firstChild);
+    while (logEl.children.length > 5) logEl.removeChild(logEl.lastChild);
+  }
+  var SPEED = 380;
+  function send(i, grp) {
+    var text = summary(i, grp);
+    if (i < 4) { stG[i].classList.add("on"); setTimeout(function () { stG[i].classList.remove("on"); }, 450); }
+    allLeds[i].classList.add("on"); setTimeout(function () { allLeds[i].classList.remove("on"); }, 450);
+    var m = meas[i], len = m.getTotalLength();
+    var halo = el("circle", { r: 11, "class": "halo" }, L.packets);
+    var dot = el("circle", { r: 5.5, "class": "packet" }, L.packets);
+    var t0 = performance.now();
+    (function step(t) {
+      var dd = (t - t0) / 1000 * SPEED;
+      if (dd >= len) { L.packets.removeChild(halo); L.packets.removeChild(dot); arrive(i, text); return; }
+      var q = m.getPointAtLength(dd);
+      halo.setAttribute("cx", q.x); halo.setAttribute("cy", q.y);
+      dot.setAttribute("cx", q.x); dot.setAttribute("cy", q.y);
+      requestAnimationFrame(step);
+    })(t0);
+  }
+
+  /* Frutas en la cinta, por grupos: al pasar por el centro de una estación, esa estación envía su mensaje */
+  var gid = 146, groups = [], BELT_V = 62, lastSpawn = -1e9;
+  function makeGroup(detached) {
+    if (!detached) gid += 1;
+    var n = 3 + Math.floor(Math.random() * 2), fr = [];
+    for (var j = 0; j < n; j++) fr.push({ d: 88 + Math.floor(Math.random() * 32), c: "fr" + Math.floor(Math.random() * 3) });
+    return { id: "G-0" + (detached ? gid : gid), fr: fr, q: Math.random() > .25 ? "alta" : "media", conf: (0.8 + Math.random() * 0.15).toFixed(2) };
+  }
+  function spawn() {
+    var g = makeGroup(false);
+    g.x = BELT_X0 + 10; g.done = [false, false, false, false];
+    g.els = g.fr.map(function (f, j) {
+      return el("circle", { r: 10, fill: "url(#" + f.c + ")" }, L.fruit);
+    });
+    groups.push(g);
+  }
+  function placeGroup(g) {
+    g.els.forEach(function (c, j) {
+      var x = g.x - j * 25, z = 44 + (j % 2) * 20;
+      var q = P(x, BELT_Y + 10, z);
+      c.setAttribute("cx", q[0].toFixed(1)); c.setAttribute("cy", q[1].toFixed(1));
+      c.setAttribute("opacity", x < BELT_X0 + 4 || x > BELT_X1 - 4 ? 0 : 1);
+    });
+  }
+
+  var running = false, last = 0, beat = 0;
+  function tick(t) {
+    if (!running) return;
+    var dt = Math.min(0.05, (t - last) / 1000); last = t;
+    slatOff = (slatOff + BELT_V * dt) % (BELT_X1 - BELT_X0); drawSlats();
+    if (t - lastSpawn > 4300) { spawn(); lastSpawn = t; }
+    groups.forEach(function (g) {
+      g.x += BELT_V * dt;
+      var mid = g.x - (g.fr.length - 1) * 12.5;
+      ST.forEach(function (s, i) { if (!g.done[i] && mid >= s.cx) { g.done[i] = true; send(i, g); } });
+      placeGroup(g);
+    });
+    groups = groups.filter(function (g) {
+      if (g.x - g.fr.length * 25 > BELT_X1) { g.els.forEach(function (c) { L.fruit.removeChild(c); }); return false; }
+      return true;
+    });
+    beat += dt;
+    if (beat > 7) { beat = 0; send(4); }
+    clock.textContent = hora();
+    requestAnimationFrame(tick);
+  }
+  function setRun(on) {
+    if (on === running) return;
+    running = on;
+    if (on) { last = performance.now(); requestAnimationFrame(tick); send(4); }
+    else { send(4, true); }
+  }
+
+  var optRun = document.getElementById("optRun");
+  optRun.addEventListener("change", function (e) { setRun(e.target.checked); });
+  document.getElementById("optCable").addEventListener("change", function (e) { svg.classList.toggle("show-cable", e.target.checked); });
+
+  /* Estado inicial: un grupo ya sobre la cinta para que la maqueta se vea completa en reposo */
+  spawn(); groups[0].x = 175; groups[0].done[0] = true; placeGroup(groups[0]);
+  clock.textContent = hora();
+  var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!reduce) { optRun.checked = true; running = true; last = performance.now(); lastSpawn = last - 2500; requestAnimationFrame(tick); }
+})();
+</script>
+</body>
+</html>

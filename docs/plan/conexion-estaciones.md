@@ -5,6 +5,8 @@
 
 > Las estaciones **no se conectan entre sí**. Todas envían sus datos a E5, que corre en la Raspberry Pi 5. El dashboard también lee de esa misma API.
 
+**Maqueta interactiva:** abre [`conexion-estaciones.html`](conexion-estaciones.html) en el navegador para ver cómo quedarían las estaciones, la tubería PVC por detrás y los mensajes llegando a E5.
+
 ## 1. Cómo se comunican (ya definido en el plan)
 
 - Protocolo: **HTTP**, con un `POST` de JSON a la API de E5 (FastAPI).
