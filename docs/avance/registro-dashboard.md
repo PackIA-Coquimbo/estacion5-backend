@@ -168,6 +168,7 @@ Según `docs/plan/rol-c-dashboard.md`:
 | `3215f74` | renombra calibre a tamano en prototipo 2 según contrato v2 |
 | `72e20a8` | agrega capa de datos api.js y ejemplos de respuesta del dashboard |
 | `34e0c09` | agrega registro de avance del dashboard |
-| `3869111` | agrega versiones de prototipo 2 y 3 adaptables a monitor vertical |
+| `e8ba0c8` | agrega versiones de prototipo 2 y 3 adaptables a monitor vertical |
+| `94885a3` | actualiza registro de avance con las versiones para monitor vertical |
 
 La rama está subida a GitHub y lista para el PR a `main`.
