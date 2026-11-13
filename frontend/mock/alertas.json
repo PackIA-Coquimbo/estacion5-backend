@@ -1,0 +1,54 @@
+{
+  "alertas": [
+    {
+      "id": 412,
+      "severidad": "falla",
+      "estacion": "E4",
+      "mensaje": "rechazada",
+      "id_grupo": "G-0145",
+      "id_fruta": "F1",
+      "creada_en": "2026-11-18T10:16:24Z",
+      "resuelta": false
+    },
+    {
+      "id": 411,
+      "severidad": "alerta",
+      "estacion": "E2",
+      "mensaje": "defectos visibles: golpe",
+      "id_grupo": "G-0145",
+      "id_fruta": "F2",
+      "creada_en": "2026-11-18T10:16:15Z",
+      "resuelta": false
+    },
+    {
+      "id": 409,
+      "severidad": "alerta",
+      "estacion": "E4",
+      "mensaje": "requiere revisión manual",
+      "id_grupo": "G-0144",
+      "id_fruta": "F3",
+      "creada_en": "2026-11-18T10:15:58Z",
+      "resuelta": false
+    },
+    {
+      "id": 408,
+      "severidad": "alerta",
+      "estacion": "E3",
+      "mensaje": "tamaños irregulares en el grupo (31 mm de diferencia)",
+      "id_grupo": "G-0144",
+      "id_fruta": null,
+      "creada_en": "2026-11-18T10:15:52Z",
+      "resuelta": false
+    },
+    {
+      "id": 401,
+      "severidad": "alerta",
+      "estacion": "E2",
+      "mensaje": "baja confianza frecuente: 3 de las últimas 12 frutas",
+      "id_grupo": null,
+      "id_fruta": null,
+      "creada_en": "2026-11-18T10:12:40Z",
+      "resuelta": false
+    }
+  ]
+}

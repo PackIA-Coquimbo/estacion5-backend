@@ -1,0 +1,45 @@
+{
+  "id_lote": "LOTE-2026-11-A",
+  "id_grupo": "G-0146",
+  "estado": "ok",
+  "ingreso": "2026-11-18T10:16:30Z",
+  "salida": "2026-11-18T10:16:50Z",
+  "e1": {
+    "timestamp": "2026-11-18T10:16:34Z",
+    "validez_imagen": true,
+    "estado_captura": "aceptada",
+    "posicion_correcta": true,
+    "frutas_detectadas": 4
+  },
+  "frutas": [
+    {
+      "id_fruta": "F1",
+      "e2": { "timestamp": "2026-11-18T10:16:40Z", "calidad_visual": "alta", "confianza_visual": 0.93, "defectos_detectados": [] },
+      "e3": { "timestamp": "2026-11-18T10:16:45Z", "diametro_mm": 104, "tamano": "mediano" },
+      "e4": { "timestamp": "2026-11-18T10:16:48Z", "categoria_final": "exportacion", "probabilidad": 0.9, "requiere_revision_manual": false },
+      "alertas": []
+    },
+    {
+      "id_fruta": "F2",
+      "e2": { "timestamp": "2026-11-18T10:16:40Z", "calidad_visual": "alta", "confianza_visual": 0.89, "defectos_detectados": [] },
+      "e3": { "timestamp": "2026-11-18T10:16:45Z", "diametro_mm": 98, "tamano": "mediano" },
+      "e4": { "timestamp": "2026-11-18T10:16:48Z", "categoria_final": "exportacion", "probabilidad": 0.88, "requiere_revision_manual": false },
+      "alertas": []
+    },
+    {
+      "id_fruta": "F3",
+      "e2": { "timestamp": "2026-11-18T10:16:40Z", "calidad_visual": "alta", "confianza_visual": 0.91, "defectos_detectados": ["mancha_leve"] },
+      "e3": { "timestamp": "2026-11-18T10:16:45Z", "diametro_mm": 115, "tamano": "grande" },
+      "e4": { "timestamp": "2026-11-18T10:16:48Z", "categoria_final": "exportacion", "probabilidad": 0.86, "requiere_revision_manual": false },
+      "alertas": []
+    },
+    {
+      "id_fruta": "F4",
+      "e2": { "timestamp": "2026-11-18T10:16:40Z", "calidad_visual": "media", "confianza_visual": 0.81, "defectos_detectados": ["madurez_desigual"] },
+      "e3": { "timestamp": "2026-11-18T10:16:45Z", "diametro_mm": 91, "tamano": "pequeno" },
+      "e4": { "timestamp": "2026-11-18T10:16:48Z", "categoria_final": "mercado_nacional", "probabilidad": 0.84, "requiere_revision_manual": false },
+      "alertas": []
+    }
+  ],
+  "alertas": []
+}

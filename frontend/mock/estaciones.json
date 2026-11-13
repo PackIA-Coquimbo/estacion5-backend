@@ -1,0 +1,43 @@
+{
+  "id_lote": "LOTE-2026-11-A",
+  "ahora": "2026-11-18T10:16:55Z",
+  "estaciones": [
+    {
+      "estacion": "E1",
+      "estado": "ok",
+      "ultima_lectura": "2026-11-18T10:16:34Z",
+      "id_grupo": "G-0146",
+      "severidad_ultima": null
+    },
+    {
+      "estacion": "E2",
+      "estado": "ok",
+      "ultima_lectura": "2026-11-18T10:16:40Z",
+      "id_grupo": "G-0146",
+      "severidad_ultima": null
+    },
+    {
+      "estacion": "E3",
+      "estado": "ok",
+      "ultima_lectura": "2026-11-18T10:16:45Z",
+      "id_grupo": "G-0146",
+      "severidad_ultima": null
+    },
+    {
+      "estacion": "E4",
+      "estado": "ok",
+      "ultima_lectura": "2026-11-18T10:16:48Z",
+      "id_grupo": "G-0146",
+      "severidad_ultima": null
+    },
+    {
+      "estacion": "E6",
+      "estado": "ok",
+      "ultima_lectura": "2026-11-18T10:16:52Z",
+      "id_grupo": "G-0146",
+      "severidad_ultima": null,
+      "estado_cinta": "normal",
+      "falla_mecanica_detectada": false
+    }
+  ]
+}

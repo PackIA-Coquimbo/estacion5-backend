@@ -428,20 +428,20 @@ const gen={
        let c=clamp(gauss(.88,.06),.5,.99); if(S.lowconf||rnd()<.05)c=clamp(gauss(.6,.06),.4,.69);
        const d=calidad==="alta"?(rnd()<.15?["mancha_leve"]:[]):calidad==="media"?[pick([["mancha_leve",3],["madurez_desigual",2]])]:calidad==="revision"?[]:[pick([["golpe",2],["antracnosis",1],["piel_danada",2]])];
        return{calidad_visual:calidad,confianza_visual:+c.toFixed(2),defectos_detectados:d}},
-  E3(){const d=Math.round(clamp(gauss(102,11),70,135));return{diametro_mm:d,calibre:d>=112?"grande":d>=92?"mediano":"pequeno"}},
+  E3(){const d=Math.round(clamp(gauss(102,11),70,135));return{diametro_mm:d,tamano:d>=112?"grande":d>=92?"mediano":"pequeno"}},
   E4(f){const e2=f.d.E2,e3=f.d.E3;let cat;
        if(!e2||!e3)cat="revision_manual";
        else if(e2.calidad_visual==="defectos_visibles")cat=rnd()<.55?"rechazo":"proceso";
        else if(e2.calidad_visual==="revision")cat="revision_manual";
        else if(e2.calidad_visual==="baja")cat=rnd()<.3?"rechazo":"proceso";
-       else if(e2.calidad_visual==="media"||e3.calibre==="pequeno")cat="mercado_nacional";
+       else if(e2.calidad_visual==="media"||e3.tamano==="pequeno")cat="mercado_nacional";
        else cat="exportacion";
        const p=+clamp(gauss(cat==="revision_manual"?.62:.87,.06),.45,.99).toFixed(2);
        return{categoria_final:cat,probabilidad:p,requiere_revision_manual:cat==="revision_manual"||p<.7}}
 };
 function rulesFruit(st,d){const a=[];
   if(st==="E2"){if(d.confianza_visual<.7)a.push(["alerta",`confianza baja (${dec(d.confianza_visual,2)})`]);if(d.calidad_visual==="defectos_visibles")a.push(["alerta","defectos visibles: "+defs(d.defectos_detectados)]);if(d.calidad_visual==="revision")a.push(["alerta","calidad visual en revisión"])}
-  if(st==="E3"){if(d.diametro_mm<80)a.push(["alerta",`bajo calibre mínimo (${d.diametro_mm} mm)`])}
+  if(st==="E3"){if(d.diametro_mm<80)a.push(["alerta",`bajo el tamaño mínimo (${d.diametro_mm} mm)`])}
   if(st==="E4"){if(d.categoria_final==="rechazo")a.push(["falla","rechazada"]);else if(d.requiere_revision_manual)a.push(["alerta","requiere revisión manual"])}
   return a}
 
@@ -544,11 +544,11 @@ const render={
       if(lg){
         if(st==="E1"){const d=lg.e1;body=d?`<div class="kv"><span>Imagen</span><b class="${d.validez_imagen?"":"x"}">${d.validez_imagen?"Válida":"No válida"}</b><span>Captura</span><b class="${d.estado_captura==="aceptada"?"":"w"}">${t(d.estado_captura)}</b><span>Posición</span><b class="${d.posicion_correcta?"":"w"}">${d.posicion_correcta?"Correcta":"Incorrecta"}</b><span>Frutas detectadas</span><b>${d.frutas_detectadas}</b></div>`:""}
         else{const rows=lg.fr.map(f=>{const d=f.d[st];if(!d)return `<li><span class="p"></span><span class="k">${f.k}</span><span class="v">Sin dato</span><span class="n"></span></li>`;
-            const an=f.an.filter(a=>st==="E2"?/confianza|defectos|calidad/.test(a[1]):st==="E3"?/calibre/.test(a[1]):/rechazada|revisión manual/.test(a[1]));
+            const an=f.an.filter(a=>st==="E2"?/confianza|defectos|calidad/.test(a[1]):st==="E3"?/tamaño/.test(a[1]):/rechazada|revisión manual/.test(a[1]));
             const cls=an.some(a=>a[0]==="falla")?"falla":an.length?"alerta":"";
             let v,n;
             if(st==="E2"){v=t(d.calidad_visual);n=`<span class="bar" style="--v:${d.confianza_visual*100}%"></span>${dec(d.confianza_visual,2)}`}
-            else if(st==="E3"){v=t(d.calibre);n=d.diametro_mm+" mm"}
+            else if(st==="E3"){v=t(d.tamano);n=d.diametro_mm+" mm"}
             else{v=`<span style="color:var(${CAT[d.categoria_final][1]})">${CAT[d.categoria_final][0]}</span>`;n=dec(d.probabilidad,2)}
             return `<li class="${cls}"><span class="p"></span><span class="k">${f.k}</span><span class="v">${v}</span><span class="n">${n}</span></li>`}).join("");
           let sum="";

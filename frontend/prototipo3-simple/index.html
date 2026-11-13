@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pantalla Estación 5 (simple)</title>
+<style>
+/* Versión simple del panel de planta: estaciones arriba, grupos y alertas al centro, cuatro indicadores abajo.
+   Sin animación de cinta, sin tipografía incrustada y sin paneles de equipo: solo lo que una persona de planta necesita mirar. */
+:root{
+  color-scheme:light;
+  --bg:#eaeff2;
+  --panel:#ffffff;
+  --panel-2:#f2f5f7;
+  --rule:#d3dce2;
+  --fg:#12202a;
+  --muted:#4f626c;
+  --faint:#6b7c86;
+  --papaya:#e2622a;   /* solo el ID del grupo */
+  --ok:#1b9460;
+  --warn:#a86d00;
+  --bad:#d23634;
+  --off:#b3c0c8;
+  --c-exp:#2f7fd1; --c-nac:#7b58d6; --c-pro:#22998a; --c-rec:var(--bad); --c-rev:var(--warn);
+  --font:"Segoe UI","Roboto","Liberation Sans","DejaVu Sans",Arial,sans-serif;
+  --r:10px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{font-size:clamp(12px,min(.84vw,1.5vh),24px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:1rem/1.35 var(--font);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+h1,h2,p{margin:0}
+h2{font-size:1.1rem;font-weight:600;color:var(--muted)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--papaya);outline-offset:2px}
+
+.app{height:100vh;height:100svh;display:flex;flex-direction:column;gap:.9rem;padding-block:1rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Cabecera */
+.top{display:flex;align-items:center;gap:2rem;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:.9rem;margin-right:auto}
+.brand b{font-size:1.9rem;font-weight:800;letter-spacing:-.01em}
+.brand span{color:var(--muted);font-size:1.1rem}
+.meta{display:flex;flex-direction:column;line-height:1.15}
+.meta small{color:var(--muted);font-size:.9rem}
+.meta strong{font-size:1.35rem;font-weight:700}
+.belt-state{display:flex;align-items:center;gap:.7rem;padding:.5rem 1.1rem .5rem .8rem;border-radius:999px;background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok);font-weight:700;font-size:1.3rem}
+.belt-state.stop{background:var(--bad);color:#fff}
+.belt-state i{width:.9rem;height:.9rem;border-radius:50%;background:currentColor}
+.clock{font-size:1.9rem;font-weight:700;min-width:6.2ch;text-align:right}
+
+.stopbar{display:flex;align-items:center;gap:1.2rem;background:var(--bad);color:#fff;border-radius:var(--r);padding:.7rem 1.2rem;font-size:1.25rem}
+.stopbar b{font-size:1.45rem}
+.stopbar button{margin-left:auto;background:#fff;color:#7a1513;border:0;border-radius:8px;padding:.5rem 1.1rem;font-weight:700;cursor:pointer}
+
+/* Estaciones */
+.stations{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.8rem}
+.st{display:flex;flex-direction:column;gap:.45rem;min-width:0;padding:.8rem .95rem;background:var(--panel);border:2px solid var(--rule);border-radius:12px;transition:border-color .25s,background-color .25s}
+.st[data-s=activo]{border-color:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 18%,transparent)}
+.st[data-s=sinsenal],.st[data-s=falla]{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 6%,var(--panel))}
+.st[data-s=detenida]{border-style:dashed}
+.st .hd{display:flex;align-items:baseline;gap:.6rem}
+.st .code{font-size:2.3rem;font-weight:800;line-height:.95}
+.st .name{font-size:1rem;color:var(--muted);line-height:1.15}
+.pill{align-self:flex-start;font-size:.95rem;font-weight:700;padding:.1rem .65rem;border-radius:999px;background:var(--panel-2);color:var(--muted);white-space:nowrap}
+.st[data-s=activo] .pill{background:var(--ok);color:#fff}
+.st[data-s=sinsenal] .pill,.st[data-s=falla] .pill{background:var(--bad);color:#fff}
+.st .val{font-size:1.45rem;font-weight:700;line-height:1.2;min-height:2.4em}
+.st .val b{font-weight:800}
+.st .det{font-size:1.05rem;color:var(--muted);min-height:1.35em}
+.st .det.w{color:var(--warn);font-weight:600}
+.st .det.x{color:var(--bad);font-weight:600}
+.st .ft{display:flex;align-items:center;gap:.45rem;margin-top:auto;border-top:1px solid var(--rule);padding-top:.45rem;font-size:.92rem;color:var(--muted);white-space:nowrap;overflow:hidden}
+.light{width:.85rem;height:.85rem;border-radius:50%;flex:none;background:var(--off)}
+.light.ok{background:var(--ok)}.light.alerta{background:var(--warn)}.light.falla{background:var(--bad)}
+
+/* Centro */
+.mid{flex:1 1 0;min-height:0;display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:.9rem}
+.panel{background:var(--panel);border-radius:var(--r);box-shadow:0 1px 0 var(--rule);padding:1rem 1.25rem;min-height:0;min-width:0;display:flex;flex-direction:column;gap:.8rem;overflow:hidden}
+.panel>header{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
+.panel>header small{color:var(--faint);font-size:.92rem}
+
+.now{display:flex;align-items:center;gap:1.6rem;flex-wrap:wrap;background:var(--panel-2);border-radius:12px;padding:.7rem 1.1rem}
+.gid{font-size:3.2rem;line-height:.9;font-weight:900;color:var(--papaya)}
+.gid span{opacity:.6}
+.now .info{display:flex;flex-direction:column;gap:.15rem;min-width:0}
+.now .where{font-size:1.3rem;font-weight:700;line-height:1.2}
+.now .facts{color:var(--muted);font-size:1.05rem}
+.prog{list-style:none;margin:0 0 0 auto;padding:0;display:flex;gap:.45rem}
+.prog li{min-width:3.2rem;text-align:center;padding:.3rem .5rem;border-radius:8px;border:2px solid var(--rule);background:var(--panel);color:var(--faint);font-weight:700;font-size:1rem}
+.prog li.done{background:var(--ok);border-color:var(--ok);color:#fff}
+.prog li.cur{border-color:var(--ok);color:var(--ok)}
+.prog li.cur.stopped{border-color:var(--bad);color:var(--bad)}
+
+.tbl-wrap{min-height:0;overflow:hidden}
+.tbl{width:100%;border-collapse:collapse;font-size:1.15rem}
+.tbl th{font-weight:500;color:var(--faint);font-size:.92rem;text-align:left;padding:0 .4rem .4rem}
+.tbl td{padding:.4rem .4rem;border-top:1px solid var(--rule);white-space:nowrap}
+.tbl td.id{font-weight:800;font-size:1.2rem}
+.tbl .r{text-align:right}
+.tbl tr.fresh td{background:color-mix(in srgb,var(--papaya) 10%,transparent)}
+.dots{display:inline-flex;gap:.25rem;vertical-align:middle}
+.dots i{width:.9rem;height:.9rem;border-radius:50%;background:var(--c)}
+.est{display:inline-flex;align-items:center;gap:.45rem}
+
+.alerts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.45rem;overflow:hidden}
+.alerts li{display:grid;grid-template-columns:auto 1fr;gap:.1rem .8rem;padding:.55rem .75rem;border-radius:8px;background:var(--panel-2);box-shadow:inset 4px 0 0 var(--warn)}
+.alerts li.falla{box-shadow:inset 4px 0 0 var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--panel-2))}
+.alerts li.info{box-shadow:inset 4px 0 0 var(--ok)}
+.alerts .when{color:var(--muted);font-size:.92rem;grid-row:1/3;padding-top:.1rem}
+.alerts .msg{font-size:1.1rem;font-weight:600;line-height:1.2}
+.alerts .who{font-size:.92rem;color:var(--muted)}
+.empty{color:var(--muted)}
+
+/* Indicadores */
+.kpis{display:grid;grid-template-columns:1fr 1fr 1fr 1.6fr;gap:.9rem}
+.kpi{background:var(--panel);border-radius:var(--r);box-shadow:0 1px 0 var(--rule);padding:.8rem 1.1rem;display:flex;flex-direction:column;gap:.35rem;min-width:0}
+.kpi .v{font-size:2.4rem;font-weight:800;line-height:1}
+.kpi .v small{font-size:1.1rem;color:var(--muted);font-weight:500;margin-left:.3rem}
+.kpi .s{color:var(--muted);font-size:.95rem}
+.mix{display:flex;height:1.1rem;border-radius:4px;overflow:hidden;gap:2px;margin-top:.2rem}
+.mix i{background:var(--c);min-width:2px}
+.legend{display:flex;flex-wrap:wrap;gap:.25rem 1rem;font-size:.95rem;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:.4rem;font-weight:600}
+.chip::before{content:"";width:.7rem;height:.7rem;border-radius:2px;background:var(--c)}
+.chip b{color:var(--fg);margin-left:.15rem}
+
+/* Simulación */
+.sim{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;color:var(--faint);font-size:.92rem}
+.sim button{background:transparent;border:1px solid var(--rule);color:var(--muted);border-radius:6px;padding:.3rem .7rem;cursor:pointer;font-size:.92rem}
+.sim button:hover{border-color:var(--muted);color:var(--fg)}
+.sim button[aria-pressed=true]{border-color:var(--warn);color:var(--warn)}
+
+@media (max-width:1100px){
+  html{font-size:14px}
+  .app{height:auto}
+  .stations{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mid{grid-template-columns:1fr;flex:none}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .prog{margin-left:0}
+  .tbl-wrap{overflow-x:auto}
+}
+@media (max-width:560px){
+  .stations,.kpis{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><b>PackIA Coquimbo</b><span>Estación 5, supervisión y trazabilidad</span></div>
+    <div class="meta"><small>Lote activo</small><strong id="lote"></strong></div>
+    <div class="belt-state" id="beltState"><i></i><span>Cinta en marcha</span></div>
+    <div class="clock" id="clock">--:--:--</div>
+  </header>
+
+  <div class="stopbar" id="stopbar" role="alert" hidden>
+    <b>Cinta detenida</b>
+    <span id="stopmsg"></span>
+    <button type="button" id="resumeBtn">Reanudar cinta</button>
+  </div>
+
+  <section class="stations" id="stations" aria-label="Estaciones"></section>
+
+  <div class="mid">
+    <section class="panel" aria-labelledby="h-grp">
+      <div class="now" id="now" aria-live="polite">
+        <div class="gid" id="gid"></div>
+        <div class="info"><div class="where" id="gwhere"></div><div class="facts" id="gfacts"></div></div>
+        <ol class="prog" id="prog" aria-label="Avance del grupo"></ol>
+      </div>
+      <header><h2 id="h-grp">Últimos grupos</h2><small id="histCount"></small></header>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Grupo</th><th>Salida</th><th>Frutas por categoría</th><th class="r">Diámetro medio</th><th>Estado</th></tr></thead>
+          <tbody id="hist"></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="panel" aria-labelledby="h-al">
+      <header><h2 id="h-al">Alertas</h2><small id="alCount"></small></header>
+      <ul class="alerts" id="alerts"></ul>
+    </section>
+  </div>
+
+  <section class="kpis" aria-label="Indicadores del turno">
+    <div class="kpi"><h2>Frutas en la última hora</h2><div class="v" id="kFph">0</div><div class="s" id="kFphS"></div></div>
+    <div class="kpi"><h2>Frutas rechazadas</h2><div class="v" id="kRej">0</div><div class="s" id="kRejS"></div></div>
+    <div class="kpi"><h2>Alertas en la última hora</h2><div class="v" id="kAl">0</div><div class="s" id="kAlS"></div></div>
+    <div class="kpi"><h2>Categoría final por fruta</h2><div class="mix" id="mix"></div><div class="legend" id="legend"></div></div>
+  </section>
+
+  <footer class="sim">
+    <span>Datos simulados para el prototipo.</span>
+    <button type="button" id="bFail">Simular falla de cinta</button>
+    <button type="button" id="bE3" aria-pressed="false">Cortar señal de E3</button>
+    <button type="button" id="bLow" aria-pressed="false">Bajar confianza de E2</button>
+  </footer>
+</div>
+
+<script>
+(()=>{
+"use strict";
+const $=id=>document.getElementById(id);
+
+/* ---------- constantes ---------- */
+const LOTE="LOTE-2026-11-A";
+const DUR=[3.4,5.2,4.5,2.8];      // segundos promedio de proceso en E1..E4
+const REG=1.4, GAP=.8;            // registro en E5 y pausa entre grupos
+const ST=[["E1","Recepción y captura"],["E2","Calidad visual"],["E3","Tamaño de la fruta"],["E4","Decisión comercial"],["E6","Cinta transportadora"]];
+const NAMES={E1:"recepción",E2:"calidad visual",E3:"tamaño",E4:"decisión",E6:"cinta"};
+const LONG={E1:"recepción y captura",E2:"calidad visual",E3:"clasificación por tamaño",E4:"decisión comercial"};
+const CAT={exportacion:["Exportación","--c-exp"],mercado_nacional:["Mercado nacional","--c-nac"],proceso:["Proceso","--c-pro"],rechazo:["Rechazo","--c-rec"],revision_manual:["Revisión manual","--c-rev"]};
+const TXT={aceptada:"Aceptada",repetir:"Repetir captura",revision:"En revisión",alta:"Alta",media:"Media",baja:"Baja",defectos_visibles:"Defectos visibles",grande:"Grande",mediano:"Mediano",pequeno:"Pequeño",uniforme:"Uniforme",irregular:"Irregular",normal:"Normal",falla_mecanica:"Falla mecánica"};
+const t=k=>TXT[k]||k;
+const DEF={mancha_leve:"mancha leve",madurez_desigual:"madurez desigual",golpe:"golpe",antracnosis:"antracnosis",piel_danada:"piel dañada"};
+const defs=l=>l.map(x=>DEF[x]||x.replace(/_/g," ")).join(", ");
+
+/* ---------- utilidades ---------- */
+const rnd=Math.random,pick=w=>{let s=0,r=rnd()*w.reduce((a,b)=>a+b[1],0);for(const [v,p] of w){s+=p;if(r<s)return v}return w[0][0]};
+const gauss=(m,s)=>m+s*Math.sqrt(-2*Math.log(rnd()||1e-9))*Math.cos(2*Math.PI*rnd());
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const pad=n=>String(n).padStart(4,"0");
+const dec=(v,n=1)=>v.toFixed(n).replace(".",",");
+const num=n=>n.toLocaleString("es-CL");
+const hhmmss=d=>new Date(d).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
+const hhmm=d=>new Date(d).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit",hour12:false});
+const ago=ms=>{const s=Math.max(0,Math.round(ms/1000));return s<60?`hace ${s} s`:`hace ${Math.floor(s/60)} min`};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+
+/* ---------- estado ---------- */
+const S={running:true,seq:0,hist:[],alerts:[],last:{},e3cut:false,lowconf:false,e6:"normal",msgs:0,
+  shiftStart:Date.now()-58*60e3,freshId:null,conf:[],trendOn:false,g:null,phase:0,phT:0};
+
+/* ---------- datos simulados (E1 por grupo; E2, E3 y E4 por fruta) ----------
+   Los rangos de diámetro de E3 son provisorios, hasta que ese equipo informe los reales. */
+const gen={
+  E1(g){const v=rnd()>.03;return{validez_imagen:v,estado_captura:v?pick([["aceptada",94],["repetir",4],["revision",2]]):"repetir",posicion_correcta:rnd()>.04,frutas_detectadas:g.n}},
+  E2(){const calidad=pick([["alta",56],["media",27],["baja",7],["defectos_visibles",7],["revision",3]]);
+    let c=clamp(gauss(.88,.06),.5,.99);if(S.lowconf||rnd()<.05)c=clamp(gauss(.6,.06),.4,.69);
+    const d=calidad==="alta"?(rnd()<.15?["mancha_leve"]:[]):calidad==="media"?[pick([["mancha_leve",3],["madurez_desigual",2]])]:calidad==="revision"?[]:[pick([["golpe",2],["antracnosis",1],["piel_danada",2]])];
+    return{calidad_visual:calidad,confianza_visual:+c.toFixed(2),defectos_detectados:d}},
+  E3(){const d=Math.round(clamp(gauss(102,11),70,135));return{diametro_mm:d,tamano:d>=112?"grande":d>=92?"mediano":"pequeno"}},
+  E4(f){const e2=f.d.E2,e3=f.d.E3;let cat;
+    if(!e2||!e3)cat="revision_manual";
+    else if(e2.calidad_visual==="defectos_visibles")cat=rnd()<.55?"rechazo":"proceso";
+    else if(e2.calidad_visual==="revision")cat="revision_manual";
+    else if(e2.calidad_visual==="baja")cat=rnd()<.3?"rechazo":"proceso";
+    else if(e2.calidad_visual==="media"||e3.tamano==="pequeno")cat="mercado_nacional";
+    else cat="exportacion";
+    const p=+clamp(gauss(cat==="revision_manual"?.62:.87,.06),.45,.99).toFixed(2);
+    return{categoria_final:cat,probabilidad:p,requiere_revision_manual:cat==="revision_manual"||p<.7}}
+};
+
+/* ---------- reglas de anomalía (en el sistema real las aplica el backend) ---------- */
+function rulesFruit(st,d){const a=[];
+  if(st==="E2"){if(d.confianza_visual<.7)a.push(["alerta",`confianza baja (${dec(d.confianza_visual,2)})`]);if(d.calidad_visual==="defectos_visibles")a.push(["alerta","defectos visibles: "+defs(d.defectos_detectados)]);if(d.calidad_visual==="revision")a.push(["alerta","calidad visual en revisión"])}
+  if(st==="E3"){if(d.diametro_mm<80)a.push(["alerta",`bajo el tamaño mínimo (${d.diametro_mm} mm)`])}
+  if(st==="E4"){if(d.categoria_final==="rechazo")a.push(["falla","rechazada"]);else if(d.requiere_revision_manual)a.push(["alerta","requiere revisión manual"])}
+  return a}
+function addAlert(sev,st,msg,ref,when){S.alerts.unshift({sev,st,msg,ref,t:when||Date.now()});S.alerts.length=Math.min(S.alerts.length,40)}
+function flag(g,sev,st,msg,live,when,fk){g.an.push([sev,msg,st,fk||null]);if(live)addAlert(sev,st,(fk?fk+": ":"")+msg,g.id,when)}
+
+/* ---------- grupos ---------- */
+function newGroup(realT0){S.seq++;const n=pick([[3,45],[4,40],[2,8],[5,7]]);
+  return{id:"G-"+pad(S.seq),n,realT0,dur:DUR.map(d=>+(d+(rnd()-.5)*.4).toFixed(2)),e1:null,uni:null,
+    fr:Array.from({length:n},(_,i)=>({k:"F"+(i+1),d:{},an:[]})),an:[],done:0,estado:"proceso"}}
+function emit(g,k,when,live){
+  const st="E"+(k+1);let worst=null;
+  if(live&&st==="E3"&&S.e3cut){flag(g,"alerta",st,"Sin datos de E3 para el grupo",live,when);return}
+  if(st==="E1"){const d=gen.E1(g);g.e1=d;S.msgs++;
+    if(!d.validez_imagen){flag(g,"falla",st,"Imagen no válida",live,when);worst="falla"}
+    else if(d.estado_captura!=="aceptada"){flag(g,"alerta",st,"Captura: "+t(d.estado_captura).toLowerCase(),live,when);worst="alerta"}
+    if(!d.posicion_correcta){flag(g,"alerta",st,"Frutas mal posicionadas",live,when);worst=worst||"alerta"}
+    if(live)S.last.E1={t:when,g,flag:worst};return}
+  for(const f of g.fr){const d=gen[st](f);f.d[st]=d;S.msgs++;
+    rulesFruit(st,d).forEach(x=>{f.an.push(x);flag(g,x[0],st,x[1],live,when,f.k);worst=worst==="falla"?"falla":x[0]})}
+  if(st==="E3"){const w=g.fr.map(f=>f.d.E3.diametro_mm),sp=Math.max(...w)-Math.min(...w);g.uni=sp>28?"irregular":"uniforme";
+    if(g.uni==="irregular"){flag(g,"alerta",st,`Tamaños irregulares en el grupo (${sp} mm de diferencia)`,live,when);worst=worst||"alerta"}}
+  if(live)S.last[st]={t:when,g,flag:worst};
+  if(st==="E2"){g.fr.forEach(f=>S.conf.push(f.d.E2.confianza_visual));while(S.conf.length>12)S.conf.shift();
+    const low=S.conf.filter(c=>c<.7).length;
+    if(live&&low>=3&&!S.trendOn){S.trendOn=true;addAlert("alerta","E2",`Baja confianza frecuente: ${low} de las últimas 12 frutas`,null,when)}
+    if(low<2)S.trendOn=false}
+}
+function finish(g,when){
+  const rej=g.fr.some(f=>f.d.E4&&f.d.E4.categoria_final==="rechazo");
+  g.estado=rej?"rechazo":g.an.length?"anomalia":"ok";g.out=when;
+  S.hist.unshift(g);if(S.hist.length>600)S.hist.pop()}
+
+/* ---------- turno precargado ---------- */
+(function seed(){
+  let tt=S.shiftStart;const end=Date.now()-25e3;
+  while(tt<end){const g=newGroup(tt);let acc=tt;
+    for(let k=0;k<4;k++){acc+=g.dur[k]*1000;emit(g,k,acc,false);g.done=k+1}
+    finish(g,acc+REG*1000);tt+=gauss(24,4)*1000}
+  const lg=S.hist[0];["E1","E2","E3","E4"].forEach((st,i)=>S.last[st]={t:Date.now()-(25-i*4)*1000,g:lg,flag:null});
+  S.last.E6={t:Date.now()-3e3};
+  addAlert("info","E6","Cinta en marcha. Inicio de turno",null,S.shiftStart);
+  S.hist.slice(0,30).reverse().forEach(g=>g.an.slice(0,1).forEach(a=>addAlert(a[0],a[2],(a[3]?a[3]+": ":"")+a[1],g.id,g.out)));
+})();
+
+/* ---------- recorrido de un grupo: E1, E2, E3, E4, registro en E5 y pausa ----------
+   En el sistema real cada paso lo marca un mensaje de la estación; aquí se simula el orden. */
+const phaseDur=(g,p)=>p<4?g.dur[p]:p===4?REG:GAP;
+function startGroup(){S.g=newGroup(Date.now());S.phase=0;S.phT=0;render.all()}
+function endPhase(){const g=S.g,p=S.phase,now=Date.now();
+  if(p<4){emit(g,p,now,true);g.done=p+1}
+  else if(p===4){finish(g,now);S.freshId=g.id;S.msgs++}
+  S.phase++;S.phT=0;
+  if(S.phase>5){startGroup();return}
+  render.all()}
+let lastTick=performance.now();
+setInterval(()=>{const n=performance.now(),dt=(n-lastTick)/1000;lastTick=n;
+  if(!S.running||!S.g)return;
+  S.phT+=dt;if(S.phT>=phaseDur(S.g,S.phase))endPhase()},200);
+
+/* ---------- vista ---------- */
+const EST={ok:["ok","Aprobado"],anomalia:["alerta","Con anomalía"],rechazo:["falla","Con rechazo"],proceso:["","En proceso"]};
+const catCount=g=>{const c={};g.fr.forEach(f=>{const k=f.d.E4&&f.d.E4.categoria_final;if(k)c[k]=(c[k]||0)+1});return c};
+const dots=g=>`<span class="dots">${g.fr.map(f=>{const k=f.d.E4&&f.d.E4.categoria_final;return `<i style="--c:var(${k?CAT[k][1]:"--off"})" title="${f.k}: ${k?CAT[k][0]:"sin dato"}"></i>`}).join("")}</span>`;
+const diamMed=g=>g.fr.every(f=>f.d.E3)?Math.round(g.fr.reduce((s,f)=>s+f.d.E3.diametro_mm,0)/g.n):null;
+const countBy=(g,st,key)=>{const c={};g.fr.forEach(f=>{const d=f.d[st];if(d)c[d[key]]=(c[d[key]]||0)+1});return c};
+const joinCounts=(c,label)=>Object.entries(c).map(([k,v])=>`${v} ${label(k).toLowerCase()}`).join(", ");
+
+$("stations").innerHTML=ST.map(([c,n])=>`<article class="st" id="c-${c}" data-s="espera"><div class="hd"><span class="code">${c}</span><span class="name">${n}</span></div><span class="pill">En espera</span><div class="val"></div><div class="det"></div><div class="ft"><span class="light"></span><span class="a"></span></div></article>`).join("");
+$("lote").textContent=LOTE;
+
+const render={
+  stations(){
+    const now=Date.now(),g=S.g;
+    const set=(st,state,pill,val,det,detCls,foot,light)=>{const c=$("c-"+st);c.dataset.s=state;
+      c.querySelector(".pill").textContent=pill;c.querySelector(".val").innerHTML=val;
+      const d=c.querySelector(".det");d.textContent=det;d.className="det "+(detCls||"");
+      c.querySelector(".a").textContent=foot;c.querySelector(".ft .light").className="light "+(light||"")};
+    ["E1","E2","E3","E4"].forEach((st,k)=>{
+      const L=S.last[st],lg=L&&L.g;let state="espera",pill="En espera";
+      if(!S.running){state="detenida";pill="Detenida"}
+      else if(S.phase===k){state="activo";pill="Procesando "+g.id}
+      if(st==="E3"&&S.e3cut){state="sinsenal";pill="Sin señal"}
+      let val="Sin datos",det="",cls="";
+      if(lg){
+        if(st==="E1"){const d=lg.e1;if(d){val=`<b>${d.frutas_detectadas}</b> frutas`;
+          det=!d.validez_imagen?"Imagen no válida":!d.posicion_correcta?"Mal posicionadas":"Captura "+t(d.estado_captura).toLowerCase();
+          cls=d.validez_imagen&&d.posicion_correcta&&d.estado_captura==="aceptada"?"":"w"}}
+        else if(st==="E2"){const c=lg.fr.map(f=>f.d.E2&&f.d.E2.confianza_visual).filter(x=>x!=null);
+          if(c.length){const m=c.reduce((a,b)=>a+b,0)/c.length;val=`Confianza <b>${dec(m,2)}</b>`;det=joinCounts(countBy(lg,"E2","calidad_visual"),t);cls=m<.7?"w":""}}
+        else if(st==="E3"){const p=diamMed(lg);
+          if(p){val=`<b>${p} mm</b> de diámetro medio`;det=joinCounts(countBy(lg,"E3","tamano"),t)+(lg.uni==="irregular"?", irregular":"");cls=lg.uni==="irregular"?"w":""}}
+        else{const c=catCount(lg);val=Object.entries(c).map(([k,v])=>`<b style="color:var(${CAT[k][1]})">${v}</b> ${CAT[k][0].toLowerCase()}`).join(", ")||"Sin datos"}
+      }
+      let foot=lg?`${lg.id}, ${ago(now-L.t)}`:"Sin datos";
+      if(st==="E3"&&S.e3cut){foot="No llegan datos de E3";det="";cls=""}
+      const light=state==="sinsenal"?"falla":L&&L.flag?(L.flag==="falla"&&st!=="E4"?"falla":"alerta"):"ok";
+      set(st,state,pill,val,det,cls,foot,light)});
+    // E6: cinta
+    const fail=S.e6==="falla_mecanica";
+    set("E6",fail?"falla":S.running?"activo":"detenida",fail?"Falla mecánica":S.running?"En marcha":"Detenida",
+      fail?"<b>Cinta detenida</b>":"<b>Normal</b>",fail?"Falla mecánica detectada":"Sin fallas",fail?"x":"",
+      "Última señal "+ago(now-S.last.E6.t),fail?"falla":"ok")},
+  now(){const g=S.g,p=S.phase;if(!g)return;
+    $("gid").innerHTML=`<span>G-</span>${g.id.slice(-4)}`;
+    $("gwhere").textContent=!S.running?"Detenido: la cinta tiene una falla":p<4?`En E${p+1}, ${LONG["E"+(p+1)]}`:p===4?"Registrando en E5":"Esperando al próximo grupo";
+    $("gfacts").textContent=`${g.n} frutas, ${Math.round((Date.now()-g.realT0)/1000)} s en línea`;
+    $("prog").innerHTML=["E1","E2","E3","E4","E5"].map((n,i)=>{
+      const cls=p>i?"done":p===i?"cur"+(S.running?"":" stopped"):"";
+      return `<li class="${cls}">${n}</li>`}).join("")},
+  hist(){
+    $("hist").innerHTML=S.hist.slice(0,8).map(g=>{const e=EST[g.estado],p=diamMed(g);
+      return `<tr class="${g.id===S.freshId?"fresh":""}"><td class="id">${g.id}</td><td>${hhmmss(g.out)}</td><td>${dots(g)} <span style="color:var(--muted)">${g.n}</span></td><td class="r">${p?p+" mm":"—"}</td><td><span class="est"><span class="light ${e[0]}"></span>${e[1]}</span></td></tr>`}).join("");
+    $("histCount").textContent=`${S.hist.length} grupos, ${num(S.hist.reduce((s,g)=>s+g.n,0))} frutas en el turno`},
+  alerts(){
+    const items=S.alerts.slice(0,6);
+    $("alerts").innerHTML=items.length?items.map(a=>`<li class="${a.sev}"><span class="when">${hhmm(a.t)}</span><span class="msg">${esc(cap(a.msg))}</span><span class="who">${a.st}, ${NAMES[a.st]}${a.ref?", grupo "+a.ref:""}</span></li>`).join(""):`<li class="empty">Sin alertas.</li>`;
+    $("alCount").textContent=S.alerts.filter(a=>a.sev!=="info"&&a.t>Date.now()-3600e3).length+" en la última hora"},
+  kpis(){
+    const now=Date.now(),H=S.hist,last=H.filter(g=>g.out>now-3600e3),nf=last.reduce((s,g)=>s+g.n,0);
+    $("kFph").textContent=num(nf);$("kFphS").textContent=`${last.length} grupos en los últimos 60 min`;
+    const F=H.flatMap(g=>g.fr),n=Math.max(1,F.length);
+    const rej=F.filter(f=>f.d.E4&&f.d.E4.categoria_final==="rechazo").length;
+    $("kRej").innerHTML=`${dec(rej/n*100)}<small>%</small>`;$("kRejS").textContent=`${rej} de ${num(F.length)} frutas del turno`;
+    const al=S.alerts.filter(a=>a.sev!=="info"&&a.t>now-3600e3).length,conn=S.e3cut?4:5;
+    $("kAl").textContent=al;$("kAlS").textContent=`${conn} de 5 estaciones con señal`;
+    const cats=Object.keys(CAT).map(k=>[k,F.filter(f=>f.d.E4&&f.d.E4.categoria_final===k).length]);
+    $("mix").innerHTML=cats.map(([k,v])=>v?`<i style="--c:var(${CAT[k][1]});flex:${v}" title="${CAT[k][0]}: ${v}"></i>`:"").join("");
+    $("legend").innerHTML=cats.map(([k,v])=>`<span class="chip" style="--c:var(${CAT[k][1]})">${CAT[k][0]}<b>${Math.round(v/n*100)}%</b></span>`).join("")},
+  top(){
+    $("clock").textContent=hhmmss(Date.now());
+    const bs=$("beltState");bs.classList.toggle("stop",!S.running);bs.querySelector("span").textContent=S.running?"Cinta en marcha":"Cinta detenida";
+    $("stopbar").hidden=S.running},
+  all(){render.stations();render.now();render.hist();render.alerts();render.kpis();render.top()}
+};
+
+/* ---------- E6 y controles de simulación ---------- */
+function e6send(estado){S.e6=estado;S.last.E6={t:Date.now()};S.msgs++}
+function failBelt(){if(!S.running)return;
+  const at=S.phase<4?"E"+(S.phase+1):"E4";
+  e6send("falla_mecanica");S.running=false;
+  addAlert("falla","E6",`Falla mecánica en el tramo de ${at}. Cinta detenida`,S.g&&S.g.id);
+  $("stopmsg").textContent=`E6 detectó una falla mecánica en el tramo de ${at}. Revise la cinta y luego reanude.`;
+  $("bFail").textContent="Reanudar cinta";render.all();$("resumeBtn").focus()}
+function resume(){if(S.running)return;e6send("normal");S.running=true;
+  addAlert("info","E6","Cinta reanudada");$("bFail").textContent="Simular falla de cinta";render.all()}
+$("bFail").onclick=()=>S.running?failBelt():resume();
+$("resumeBtn").onclick=resume;
+$("bE3").onclick=e=>{S.e3cut=!S.e3cut;e.target.setAttribute("aria-pressed",S.e3cut);e.target.textContent=S.e3cut?"Restablecer señal de E3":"Cortar señal de E3";render.all()};
+$("bLow").onclick=e=>{S.lowconf=!S.lowconf;e.target.setAttribute("aria-pressed",S.lowconf);e.target.textContent=S.lowconf?"Normalizar confianza de E2":"Bajar confianza de E2"};
+
+setInterval(()=>{if(S.running)e6send("normal")},10e3);                      // latido de E6 mientras la cinta marcha
+setInterval(()=>{render.stations();render.now();render.top()},1000);
+setInterval(()=>{render.kpis();render.alerts()},5000);
+startGroup();
+try{navigator.wakeLock&&navigator.wakeLock.request("screen").catch(()=>{})}catch(e){}
+})();
+</script>
+</body>
+</html>

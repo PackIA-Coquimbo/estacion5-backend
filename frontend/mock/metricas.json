@@ -1,0 +1,19 @@
+{
+  "id_lote": "LOTE-2026-11-A",
+  "desde": "2026-11-18T09:18:00Z",
+  "hasta": "2026-11-18T10:17:00Z",
+  "grupos_turno": 146,
+  "frutas_turno": 584,
+  "frutas_ultima_hora": 498,
+  "grupos_ultima_hora": 124,
+  "rechazadas": 32,
+  "porcentaje_rechazo": 5.5,
+  "alertas_ultima_hora": 18,
+  "por_categoria": {
+    "exportacion": 297,
+    "mercado_nacional": 131,
+    "proceso": 85,
+    "rechazo": 32,
+    "revision_manual": 39
+  }
+}
