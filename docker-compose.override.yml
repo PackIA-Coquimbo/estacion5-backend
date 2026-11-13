@@ -1,0 +1,11 @@
+# Ajustes solo para desarrollo. `docker compose up` los aplica automáticamente.
+# En la Raspberry Pi NO se usa: ahí se levanta con `-f docker-compose.yml`.
+
+services:
+  backend:
+    restart: "no"
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      # Sincroniza cambios del código y del dashboard sin reconstruir la imagen
+      - ./app:/app/app
+      - ./frontend:/app/frontend

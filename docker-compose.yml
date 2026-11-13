@@ -1,13 +1,28 @@
-version: '3.8'
+# Configuración base, usada tal cual en la Raspberry Pi 5:
+#   docker compose -f docker-compose.yml up -d --build
+# En desarrollo basta con `docker compose up --build`: Docker suma
+# automáticamente docker-compose.override.yml (recarga en caliente).
 
 services:
   backend:
     build: .
     container_name: packia_estacion5_api
+    restart: unless-stopped
     ports:
-      - "8000:8000"
-    volumes:
-      # Sincroniza cambios en código en tiempo real sin reconstruir la imagen
-      - ./app:/app/app 
+      - "${API_PORT:-8000}:8000"
     environment:
       - PYTHONUNBUFFERED=1
+      - DATABASE_URL=${DATABASE_URL:-sqlite:////app/data/e5.db}
+      - TZ=${TZ:-America/Santiago}
+    volumes:
+      # La base SQLite sobrevive a reinicios y reconstrucciones del contenedor
+      - e5_datos:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  e5_datos:
